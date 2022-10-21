@@ -94,4 +94,32 @@ Gets a specific machine by that machine's id number
 
 Returns a specific machine object by id number
 
+## **DELETE** /machine/<id>
 
+Deletes a Machine
+
+> **HEADERS**  
+
+- **Authorization** : User {token}   
+
+> **PARAMETERS**
+
+- id
+
+> **RESPONSE**
+- *Successfully Deleted Machine*
+
+## **Put** /user/<id>
+
+Modifies User id number
+
+> **HEADERS**  
+
+- **Authorization** : From Single Sign On   
+
+> **PARAMETERS**
+
+- id
+
+> **RESPONSE**
+- *Successfully Changed user id number*
