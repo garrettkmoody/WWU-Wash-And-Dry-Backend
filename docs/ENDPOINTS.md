@@ -14,6 +14,36 @@ Gets a list of all machines and details about them
 
 > **RESPONSE**
 
+> ## **Delete** /user
+
+Deletes a user 
+
+> **HEADERS**  
+
+- **Authorization** from Single Sign On 
+
+> **PARAMETERS**
+
+- ***UserID***
+
+> **RESPONSE**
+- *Successfully deleted user*
+
+> ## **GET** /user
+
+Gets information about a user
+
+> **HEADERS**  
+
+- **Authorization** from Single Sign On
+
+> **PARAMETERS**
+
+- ***UserID***
+
+> **RESPONSE**
+- *Returns information about the User*
+
 >## **GET** /machines/sittner/<floor>
 
 Gets a list of machines and their details by floor in sittner
