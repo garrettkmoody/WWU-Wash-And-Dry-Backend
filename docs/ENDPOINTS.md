@@ -100,7 +100,7 @@ Deletes a Machine
 
 > **HEADERS**  
 
-- **Authorization** : User {token}   
+- **Authorization** : Admin 
 
 > **PARAMETERS**
 
@@ -111,15 +111,15 @@ Deletes a Machine
 
 ## **Put** /user/<id>
 
-Modifies User id number
+Modifies preferance for user
 
 > **HEADERS**  
 
-- **Authorization** : From Single Sign On   
+- **Authorization** : User {token}
 
 > **PARAMETERS**
 
-- id
+-id?
 
 > **RESPONSE**
 - *Successfully Changed user id number*
