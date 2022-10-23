@@ -122,4 +122,4 @@ Modifies preferance for user
 -id?
 
 > **RESPONSE**
-- *Successfully Changed user id number*
+- *Successfully Changes Preferance for user*
