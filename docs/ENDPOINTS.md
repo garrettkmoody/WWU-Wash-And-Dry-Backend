@@ -94,4 +94,32 @@ Gets a specific machine by that machine's id number
 
 Returns a specific machine object by id number
 
+## **DELETE** /machine/<id>
 
+Deletes a Machine
+
+> **HEADERS**  
+
+- **Authorization** : Admin 
+
+> **PARAMETERS**
+
+- id
+
+> **RESPONSE**
+- *Successfully Deleted Machine*
+
+## **Put** /user/<id>
+
+Modifies preferance for user
+
+> **HEADERS**  
+
+- **Authorization** : Bearer {token}
+
+> **PARAMETERS**
+
+- preferance id
+
+> **RESPONSE**
+- *Successfully Changes Preferance for user*
