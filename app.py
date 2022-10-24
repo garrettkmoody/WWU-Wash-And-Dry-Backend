@@ -25,7 +25,8 @@ class User(db.Model):
     name = db.Column(db.String(100))
     email = db.Column(db.String(70), unique=True)
 
-
+with app.app_context():
+    db.create_all()
 # Token Function Decorator
 
 
@@ -66,6 +67,7 @@ def callback():
     r = requests.post(
         url='https://login.microsoftonline.com/d958f048-e431-4277-9c8d-ebfb75e7aa64/oauth2/v2.0/token', data=body)
     data = r.json()
+
 
     try:
         authHeaders = {

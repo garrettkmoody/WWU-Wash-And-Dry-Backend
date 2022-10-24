@@ -115,11 +115,11 @@ Modifies preferance for user
 
 > **HEADERS**  
 
-- **Authorization** : User {token}
+- **Authorization** : Bearer {token}
 
 > **PARAMETERS**
 
--id?
+- preferance id
 
 > **RESPONSE**
 - *Successfully Changes Preferance for user*
