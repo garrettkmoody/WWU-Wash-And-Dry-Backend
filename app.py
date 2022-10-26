@@ -10,31 +10,32 @@ import requests
 load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = str(os.environ.get("SECRET_KEY"))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///Database.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///Database.dbUser'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.config['AZURE_OAUTH_TENANCY'] = str(os.environ.get("TENANT_ID"))
 app.config['AZURE_OAUTH_CLIENT_SECRET'] = str(os.environ.get("CLIENT_SECRET"))
 app.config['AZURE_OAUTH_APPLICATION_ID'] = str(
     os.environ.get("APPLICATION_ID"))
-db = SQLAlchemy(app)
+dbUser = SQLAlchemy(app)
+dbMachines = SQLAlchemy(app)
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    public_id = db.Column(db.String(50), unique=True)
-    name = db.Column(db.String(100))
-    email = db.Column(db.String(70), unique=True)
+class User(dbUser.Model):
+    id = dbUser.Column(dbUser.Integer, primary_key=True)
+    public_id = dbUser.Column(dbUser.String(50), unique=True)
+    name = dbUser.Column(dbUser.String(100))
+    email = dbUser.Column(dbUser.String(70), unique=True)
 
-class Machine(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    public_id = db.Column(db.String(50), unique=True)
-    dorm = db.Column(db.String(10))
-    floor = db.Column(db.Integer)
-    is_available = db.Column(db.Boolean)
-    last_service_date = db.Column(db.Integer)
-    installation_date = db.Column(db.Integer)
+class Machine(dbMachines.Model):
+    id = dbMachines.Column(dbMachines.Integer, primary_key=True)
+    public_id = dbMachines.Column(dbMachines.String(50), unique=True)
+    dorm = dbMachines.Column(dbMachines.String(10))
+    floor = dbMachines.Column(dbMachines.Integer)
+    is_available = dbMachines.Column(dbMachines.Boolean)
+    last_service_date = dbMachines.Column(dbMachines.Integer)
+    installation_date = dbMachines.Column(dbMachines.Integer)
 
 with app.app_context():
-    db.create_all()
+    dbUser.create_all()
 # Token Function Decorator
 
 
@@ -85,8 +86,8 @@ def callback():
         userData = userResponse.json()
         if not User.query.filter_by(public_id=userData['id']).first():
             newUser = User(public_id=userData['id'], name=userData['displayName'], email=userData['mail'])
-            db.session.add(newUser)
-            db.session.commit()
+            dbUser.session.add(newUser)
+            dbUser.session.commit()
             print("New User Created!")
 
         token = jwt.encode({'public_id': userData['id'], 'exp': datetime.datetime.utcnow(
