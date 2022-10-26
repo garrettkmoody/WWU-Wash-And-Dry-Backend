@@ -25,11 +25,11 @@ class User(db.Model):
     email = db.Column(db.String(70), unique=True)
 
 class Machine(db.Model):
-    id = db.Column(db.Integer, primary_Key=True)
+    id = db.Column(db.Integer, primary_key=True)
     public_id = db.Column(db.String(50), unique=True)
     dorm = db.Column(db.String(10))
     floor = db.Column(db.Integer)
-    is_available = db.Column(db.Bool)
+    is_available = db.Column(db.Boolean)
     last_service_date = db.Column(db.Integer)
     installation_date = db.Column(db.Integer)
 
