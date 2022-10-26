@@ -1,4 +1,3 @@
-from crypt import methods
 import datetime
 from functools import wraps
 from flask import Flask, render_template, redirect, request, jsonify
