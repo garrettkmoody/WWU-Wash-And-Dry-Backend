@@ -1,6 +1,7 @@
+from crypt import methods
 import datetime
 from functools import wraps
-from flask import Flask, redirect, request, jsonify
+from flask import Flask, render_template, redirect, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 import jwt
@@ -16,26 +17,38 @@ app.config['AZURE_OAUTH_TENANCY'] = str(os.environ.get("TENANT_ID"))
 app.config['AZURE_OAUTH_CLIENT_SECRET'] = str(os.environ.get("CLIENT_SECRET"))
 app.config['AZURE_OAUTH_APPLICATION_ID'] = str(
     os.environ.get("APPLICATION_ID"))
+
+#This might not need to be split
 dbUser = SQLAlchemy(app)
 dbMachines = SQLAlchemy(app)
 
 class User(dbUser.Model):
+    #The tablename may be unnecessary 
+    __tablename__ = 'user'
     id = dbUser.Column(dbUser.Integer, primary_key=True)
     public_id = dbUser.Column(dbUser.String(50), unique=True)
     name = dbUser.Column(dbUser.String(100))
     email = dbUser.Column(dbUser.String(70), unique=True)
 
-class Machine(dbMachines.Model):
+with app.app_context():
+    dbUser.create_all()
+
+class Machines(dbMachines.Model):
+    __tablename__ = 'machines'
+    #Unique id for each machine
     id = dbMachines.Column(dbMachines.Integer, primary_key=True)
-    public_id = dbMachines.Column(dbMachines.String(50), unique=True)
+    #An id based on floor
+    floor_id = dbMachines.Column(dbMachines.String(50), unique=True)
     dorm = dbMachines.Column(dbMachines.String(10))
     floor = dbMachines.Column(dbMachines.Integer)
     is_available = dbMachines.Column(dbMachines.Boolean)
-    last_service_date = dbMachines.Column(dbMachines.Integer)
-    installation_date = dbMachines.Column(dbMachines.Integer)
+    last_service_date = dbMachines.Column(dbMachines.String)
+    installation_date = dbMachines.Column(dbMachines.String)
 
 with app.app_context():
-    dbUser.create_all()
+    dbMachines.create_all()
+
+
 # Token Function Decorator
 
 
@@ -95,6 +108,29 @@ def callback():
         return redirect("http://www.google.com?token=" + token)
     except:
         return redirect("http://www.google.com?error=AuthFailed")
+
+
+@app.route('/machines/<int:requested_id>', methods=['GET'])
+def get_machine_by_id(requested_id):
+    machine= dbMachines.one_or_404(dbMachines.select(Machines).filter_by(id == requested_id)).description = f"Machine does not exist with the id '{requested_id}'."
+    return render_template("show_machine", machine=machine)
+
+@app.route('/machines/<string:requested_dorm>/<int:requested_floor>/<int:requested_floor_id>', methods=['GET'])
+def get_machine(requested_floor_id, requested_floor, requested_dorm):
+    #May need better error handling if they request Sittner with an non-existent floor number / floor_id
+    machine= dbMachines.one_or_404(dbMachines.select(Machines).filter_by(Machines.id == requested_floor_id, Machines.floor == requested_floor, Machines.dorm == requested_dorm)).description=f"Either requested dorm '{requested_dorm}' does not exist, requested_floor '{requested_floor}' does not exist, requested_floor_id '{requested_floor_id}' does not exist."
+    return render_template("show_machine", machine = machine)
+
+@app.route('/machines/<string:requested_dorm>/<int:requested_floor>', methods=['GET'])
+def get_machine(requested_floor, requested_dorm):
+    #May need better error handling if they request Sittner with an non-existent floor number
+    machine= dbMachines.get_or_404(dbMachines.select(Machines).filter_by(Machines.floor == requested_floor, Machines.dorm == requested_dorm)).description=f"Either requested dorm '{requested_dorm}' does not exist, requested_floor '{requested_floor}' does not exist."
+    return render_template("show_machine", machine = machine)
+
+@app.route('/machines/<string:requested_dorm>', methods=['GET'])
+def get_machine(requested_floor, requested_dorm):
+    machine= dbMachines.get_or_404(dbMachines.select(Machines).filter_by(Machines.floor == requested_floor, Machines.dorm == requested_dorm)).description=f"Requested dorm '{requested_dorm}' does not exist."
+    return render_template("show_machine", machine = machine)
 
 
 # Unprotected route, no token required
