@@ -115,20 +115,20 @@ def get_machine_by_id(requested_id):
     return render_template("show_machine", machine=machine)
 
 @app.route('/machines/<string:requested_dorm>/<int:requested_floor>/<int:requested_floor_id>', methods=['GET'])
-def get_machine_by_dorm_floor_floorid(requested_floor_id, requested_floor, requested_dorm):
+def get_machine_by_dorm_floor_floorid(requested_dorm, requested_floor, requested_floor_id):
     #May need better error handling if they request Sittner with an non-existent floor number / floor_id
     machine= dbMachines.one_or_404(dbMachines.select(Machines).filter_by(Machines.id == requested_floor_id, Machines.floor == requested_floor, Machines.dorm == requested_dorm)).description=f"Either requested dorm '{requested_dorm}' does not exist, requested_floor '{requested_floor}' does not exist, requested_floor_id '{requested_floor_id}' does not exist."
     return render_template("show_machine", machine = machine)
 
 @app.route('/machines/<string:requested_dorm>/<int:requested_floor>', methods=['GET'])
-def get_machines_by_dorm_and_floor(requested_floor, requested_dorm):
+def get_machines_by_dorm_and_floor(requested_dorm, requested_floor):
     #May need better error handling if they request Sittner with an non-existent floor number
     machine= dbMachines.get_or_404(dbMachines.select(Machines).filter_by(Machines.floor == requested_floor, Machines.dorm == requested_dorm)).description=f"Either requested dorm '{requested_dorm}' does not exist, requested_floor '{requested_floor}' does not exist."
     return render_template("show_machine", machine = machine)
 
 @app.route('/machines/<string:requested_dorm>', methods=['GET'])
 def get_machines_by_dorm( requested_dorm):
-    machine= dbMachines.get_or_404(dbMachines.select(Machines).filter_by(Machines.floor == requested_floor, Machines.dorm == requested_dorm)).description=f"Requested dorm '{requested_dorm}' does not exist."
+    machine= dbMachines.get_or_404(dbMachines.select(Machines).filter_by(Machines.dorm == requested_dorm)).description=f"Requested dorm '{requested_dorm}' does not exist."
     return render_template("show_machine", machine = machine)
 
 
