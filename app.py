@@ -147,10 +147,9 @@ def unprotected():
 def protected(current_user):
     return 'Hello ' + current_user.name
 
-@app.route('/user',methods=['GET','DELETE'])
-def get_user():
+@app.route('/user/<requested_UserID>',methods=['GET','DELETE'])
+def get_user(requested_UserID):
    # waiting to implement interactions with database until other endpoints are ready
-    requested_UserID=request.values['userid']
     if request.method=='GET':
         # user_info= db.one_or_404(db.select(User).db.filter_by(id == requested_UserID)).description=f"User does not exist with the ID {requested_UserID}"
         return f'got information for user with ID: {requested_UserID}', 200
