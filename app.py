@@ -149,12 +149,19 @@ def protected(current_user):
 
 @app.route('/user/<requested_UserID>',methods=['GET','DELETE'])
 def get_user(requested_UserID):
-   # waiting to implement interactions with database until other endpoints are ready
     if request.method=='GET':
-        # user_info= db.one_or_404(db.select(User).db.filter_by(id == requested_UserID)).description=f"User does not exist with the ID {requested_UserID}"
-        return f'got information for user with ID: {requested_UserID}', 200
+        #Filter can be changed later to be more secure
+        #First_or_404 will abort if not found and send a 404
+        user_info=User.query.filter_by(public_id=2).first_or_404()
+        return [user_info.name,user_info.public_id,user_info.email]
     elif request.method=='DELETE':
-        return f'deleted information for user with ID: {requested_UserID}', 200
+        #Filter can be changed later to be more secure
+        delete_Request=User.query.filter_by(public_id=requested_UserID).delete()
+        dbUser.session.commit()
+        if delete_Request:
+            return f'deleted information for user with ID: {requested_UserID}', 200
+        else: 
+            return f'Could not find information for User with ID: {requested_UserID}',404
 
 
 # main driver function
