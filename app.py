@@ -152,7 +152,7 @@ def get_user(requested_UserID):
     if request.method=='GET':
         #Filter can be changed later to be more secure
         #First_or_404 will abort if not found and send a 404
-        user_info=User.query.filter_by(public_id=2).first_or_404()
+        user_info=User.query.filter_by(public_id=requested_UserID).first_or_404()
         return [user_info.name,user_info.public_id,user_info.email]
     elif request.method=='DELETE':
         #Filter can be changed later to be more secure
