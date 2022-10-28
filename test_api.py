@@ -50,7 +50,7 @@ def test_getMachineById(app_context):
     test_floorId= "1"
     test_dorm = "Sittner"
     test_floor = "0"
-    test_isAvailable = "1"
+    test_isAvailable = "TRUE"
     test_lastServiceDate = "10/27/2022"
     test_installationDate = "10/27/2022"
     newMachine = Machines(id = test_id, floor_id = test_floorId, dorm = test_dorm, floor = test_floor, is_available = test_isAvailable, last_service_date = test_lastServiceDate, installation_date = test_installationDate)
