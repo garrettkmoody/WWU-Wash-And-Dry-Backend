@@ -147,6 +147,22 @@ def unprotected():
 def protected(current_user):
     return 'Hello ' + current_user.name
 
+@app.route('/user/<requested_UserID>',methods=['GET','DELETE'])
+def get_user(requested_UserID):
+    if request.method=='GET':
+        #Filter can be changed later to be more secure
+        #First_or_404 will abort if not found and send a 404
+        user_info=User.query.filter_by(public_id=requested_UserID).first_or_404()
+        return [user_info.name,user_info.public_id,user_info.email]
+    elif request.method=='DELETE':
+        #Filter can be changed later to be more secure
+        delete_Request=User.query.filter_by(public_id=requested_UserID).delete()
+        dbUser.session.commit()
+        if delete_Request:
+            return f'deleted information for user with ID: {requested_UserID}', 200
+        else: 
+            return f'Could not find information for User with ID: {requested_UserID}',404
+
 
 # main driver function
 if __name__ == '__main__':
