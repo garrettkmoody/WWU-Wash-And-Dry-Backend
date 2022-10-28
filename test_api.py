@@ -58,7 +58,7 @@ def test_getMachineById(app_context):
     dbMachines.session.commit()
     response=app.test_client().get(f'/machines/{test_id}')
     assert response.status_code == 200
-    assert response.data.decode('utf-8')=='[1,1,0,\"Sittner\",true,\"10/27/2022\",\"10/27/2022\"]\n'
+    assert response.data.decode('utf-8')=='[1,\"1\",0,\"Sittner\",true,\"10/27/2022\",\"10/27/2022\"]\n'
 
 
 
