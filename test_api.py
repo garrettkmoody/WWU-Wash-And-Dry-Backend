@@ -1,4 +1,4 @@
-from app import app, User, dbUser, Machines, dbMachines
+from app import app, User, db, Machines
 import pytest
 
 
@@ -20,13 +20,13 @@ def test_getUser(app_context):
     test_public_ID=1
     test_email="Walla Walla"
     newUser = User(public_id=test_public_ID, name=test_name, email=test_email)
-    dbUser.session.add(newUser)
-    dbUser.session.commit()
+    db.session.add(newUser)
+    db.session.commit()
     #send request to get information
     response=app.test_client().get(f'/user/{test_public_ID}')
     #get rid of test user from database
     delete_Request=User.query.filter_by(public_id=test_public_ID).delete()
-    dbUser.session.commit()
+    db.session.commit()
     assert response.status_code==200
     assert response.data.decode('utf-8')=='[\"Hayden\",\"1\",\"Walla Walla\"]\n'
 
@@ -37,8 +37,8 @@ def test_deleteUser(app_context):
     test_public_ID=1
     test_email="Walla Walla"
     newUser = User(public_id=test_public_ID, name=test_name, email=test_email)
-    dbUser.session.add(newUser)
-    dbUser.session.commit()
+    db.session.add(newUser)
+    db.session.commit()
     #send delete request
     response=app.test_client().delete(f'/user/{test_public_ID}')
     assert response.status_code==200
@@ -54,11 +54,13 @@ def test_getMachineById(app_context):
     test_lastServiceDate = "10/27/2022"
     test_installationDate = "10/27/2022"
     newMachine = Machines(id = test_id, floor_id = test_floorId, dorm = test_dorm, floor = test_floor, is_available = test_isAvailable, last_service_date = test_lastServiceDate, installation_date = test_installationDate)
-    dbMachines.session.add(newMachine)
-    dbMachines.session.commit()
+    db.session.add(newMachine)
+    db.session.commit()
     response=app.test_client().get(f'/machines/{test_id}')
+    delete_Request=Machines.query.filter_by(id = test_id).delete()
+    db.session.commit()
     assert response.status_code == 200
-    assert response.data.decode('utf-8')=='[1,\"1\",0,\"Sittner\",true,\"10/27/2022\",\"10/27/2022\"]\n'
+    assert response.data.decode('utf-8')=='[1,1,0,\"Sittner\",true,\"10/27/2022\",\"10/27/2022\"]\n'
 
 
 

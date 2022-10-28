@@ -10,7 +10,8 @@ import requests
 load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = str(os.environ.get("SECRET_KEY"))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///Database.dbUser'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///User.db'
+app.config['SQLALCHEMY_BINDS'] = {'machines' : 'sqlite:///Machine.db'}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.config['AZURE_OAUTH_TENANCY'] = str(os.environ.get("TENANT_ID"))
 app.config['AZURE_OAUTH_CLIENT_SECRET'] = str(os.environ.get("CLIENT_SECRET"))
@@ -18,32 +19,30 @@ app.config['AZURE_OAUTH_APPLICATION_ID'] = str(
     os.environ.get("APPLICATION_ID"))
 
 #This might not need to be split
-dbUser = SQLAlchemy(app)
-dbMachines = SQLAlchemy(app)
+db = SQLAlchemy(app)
+db = SQLAlchemy(app)
 
-class User(dbUser.Model):
+class User(db.Model):
     #The tablename may be unnecessary 
-    __tablename__ = 'user'
-    id = dbUser.Column(dbUser.Integer, primary_key=True)
-    public_id = dbUser.Column(dbUser.String(50), unique=True)
-    name = dbUser.Column(dbUser.String(100))
-    email = dbUser.Column(dbUser.String(70), unique=True)
+    id = db.Column(db.Integer, primary_key=True)
+    public_id = db.Column(db.String(50), unique=True)
+    name = db.Column(db.String(100))
+    email = db.Column(db.String(70), unique=True)
 
-class Machines(dbMachines.Model):
-    __tablename__ = 'machines'
+class Machines(db.Model):
+    __bind_key__ = 'machines'
     #Unique id for each machine
-    id = dbMachines.Column(dbMachines.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     #An id based on floor
-    floor_id = dbMachines.Column(dbMachines.Integer, unique=True)
-    dorm = dbMachines.Column(dbMachines.String(10))
-    floor = dbMachines.Column(dbMachines.Integer)
-    is_available = dbMachines.Column(dbMachines.Boolean)
-    last_service_date = dbMachines.Column(dbMachines.String)
-    installation_date = dbMachines.Column(dbMachines.String)
+    floor_id = db.Column(db.Integer)
+    dorm = db.Column(db.String(10))
+    floor = db.Column(db.Integer)
+    is_available = db.Column(db.Boolean)
+    last_service_date = db.Column(db.String)
+    installation_date = db.Column(db.String)
 
 with app.app_context():
-    dbUser.create_all()
-    dbMachines.create_all()
+    db.create_all()
 
 
 # Token Function Decorator
@@ -96,8 +95,8 @@ def callback():
         userData = userResponse.json()
         if not User.query.filter_by(public_id=userData['id']).first():
             newUser = User(public_id=userData['id'], name=userData['displayName'], email=userData['mail'])
-            dbUser.session.add(newUser)
-            dbUser.session.commit()
+            db.session.add(newUser)
+            db.session.commit()
             print("New User Created!")
 
         token = jwt.encode({'public_id': userData['id'], 'exp': datetime.datetime.utcnow(
@@ -114,7 +113,7 @@ def get_machine_by_id(requested_id):
         return [machine_info.id, machine_info.floor_id, machine_info.floor, machine_info.dorm, machine_info.is_available, machine_info.last_service_date, machine_info.installation_date]
     elif request.method == 'DELETE':
         delete_request = Machines.query.filter_by(id = requested_id).delete()
-        dbMachines.session.commit()
+        db.session.commit()
         if delete_request:
             return f'deleted information for machine with ID: {requested_id}', 200
         else: 
@@ -162,7 +161,7 @@ def get_user(requested_UserID):
     elif request.method=='DELETE':
         #Filter can be changed later to be more secure
         delete_Request=User.query.filter_by(public_id=requested_UserID).delete()
-        dbUser.session.commit()
+        db.session.commit()
         if delete_Request:
             return f'deleted information for user with ID: {requested_UserID}', 200
         else: 
