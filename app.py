@@ -7,8 +7,6 @@ import jwt
 import os
 import requests
 
-import errorhandler
-
 load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = str(os.environ.get("SECRET_KEY"))
@@ -31,9 +29,6 @@ class User(dbUser.Model):
     name = dbUser.Column(dbUser.String(100))
     email = dbUser.Column(dbUser.String(70), unique=True)
 
-with app.app_context():
-    dbUser.create_all()
-
 class Machines(dbMachines.Model):
     __tablename__ = 'machines'
     #Unique id for each machine
@@ -47,6 +42,7 @@ class Machines(dbMachines.Model):
     installation_date = dbMachines.Column(dbMachines.String)
 
 with app.app_context():
+    dbUser.create_all()
     dbMachines.create_all()
 
 
@@ -111,27 +107,34 @@ def callback():
         return redirect("http://www.google.com?error=AuthFailed")
 
 
-@app.route('/machines/<int:requested_id>', methods=['GET'])
+@app.route('/machines/<int:requested_id>', methods=['GET' , 'DELETE'])
 def get_machine_by_id(requested_id):
-    machine= dbMachines.one_or_404(dbMachines.select(Machines).filter_by(id == requested_id)).description = f"Machine does not exist with the id '{requested_id}'."
-    return render_template("show_machine", machine=machine)
+    if request.method == 'GET':
+        machine_info= Machines.query.filter_by(id = requested_id).first_or_404()
+        return [machine_info.id, machine_info.floor_id, machine_info.floor, machine_info.dorm, machine_info.is_available, machine_info.last_service_date, machine_info.installation_date]
+    elif request.method == 'DELETE':
+        delete_request = Machines.query.filter_by(id = requested_id).delete()
+        dbMachines.session.commit()
+        if delete_request:
+            return f'deleted information for machine with ID: {requested_id}', 200
+        else: 
+            return f'Could not find information for machine with ID: {requested_id}',404
+    
 
 @app.route('/machines/<string:requested_dorm>/<int:requested_floor>/<int:requested_floor_id>', methods=['GET'])
 def get_machine_by_dorm_floor_floorid(requested_dorm, requested_floor, requested_floor_id):
-    #May need better error handling if they request Sittner with an non-existent floor number / floor_id
-    machine= dbMachines.one_or_404(dbMachines.select(Machines).filter_by(Machines.id == requested_floor_id, Machines.floor == requested_floor, Machines.dorm == requested_dorm)).description=f"Either requested dorm '{requested_dorm}' does not exist, requested_floor '{requested_floor}' does not exist, requested_floor_id '{requested_floor_id}' does not exist."
-    return render_template("show_machine", machine = machine)
+    machine_info = Machines.query.filter_by(floor_id = requested_floor_id, floor = requested_floor, dorm = requested_dorm).first_or_404()
+    return [machine_info.id, machine_info.is_available]
 
 @app.route('/machines/<string:requested_dorm>/<int:requested_floor>', methods=['GET'])
 def get_machines_by_dorm_and_floor(requested_dorm, requested_floor):
-    #May need better error handling if they request Sittner with an non-existent floor number
-    machine= dbMachines.get_or_404(dbMachines.select(Machines).filter_by(Machines.floor == requested_floor, Machines.dorm == requested_dorm)).description=f"Either requested dorm '{requested_dorm}' does not exist, requested_floor '{requested_floor}' does not exist."
-    return render_template("show_machine", machine = machine)
+    machine_info = Machines.query.filter_by(floor = requested_floor, dorm = requested_dorm).get_or_404()
+    return [machine_info.id, machine_info.floor_id, machine_info.is_available]
 
 @app.route('/machines/<string:requested_dorm>', methods=['GET'])
 def get_machines_by_dorm( requested_dorm):
-    machine= dbMachines.get_or_404(dbMachines.select(Machines).filter_by(Machines.dorm == requested_dorm)).description=f"Requested dorm '{requested_dorm}' does not exist."
-    return render_template("show_machine", machine = machine)
+    machine_info = Machines.query.filter_by(dorm = requested_dorm).get_or_404()
+    return [machine_info.id, machine_info.floor, machine_info.floor_id, machine_info.is_available]
 
 
 # Unprotected route, no token required
