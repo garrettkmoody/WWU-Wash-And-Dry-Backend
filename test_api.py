@@ -1,4 +1,4 @@
-from app import app, User, dbUser
+from app import app, User, dbUser, Machines, dbMachines
 import pytest
 
 
@@ -43,3 +43,22 @@ def test_deleteUser(app_context):
     response=app.test_client().delete(f'/user/{test_public_ID}')
     assert response.status_code==200
     assert response.data.decode('utf-8')==f'deleted information for user with ID: {test_public_ID}'
+
+def test_getMachineById(app_context):
+    #create test machine
+    test_id = "1"
+    test_floorId= "1"
+    test_dorm = "Sittner"
+    test_floor = "0"
+    test_isAvailable = "1"
+    test_lastServiceDate = "10/27/2022"
+    test_installationDate = "10/27/2022"
+    newMachine = Machines(id = test_id, floor_id = test_floorId, dorm = test_dorm, floor = test_floor, is_available = test_isAvailable, last_service_date = test_lastServiceDate, installation_date = test_installationDate)
+    dbMachines.session.add(newMachine)
+    dbMachines.session.commit()
+    response=app.test_client().get(f'/machines/{test_id}')
+    assert response.status_code == 200
+    #need to add additional assert
+
+
+
