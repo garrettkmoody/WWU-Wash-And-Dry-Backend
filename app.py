@@ -34,7 +34,7 @@ class Machines(dbMachines.Model):
     #Unique id for each machine
     id = dbMachines.Column(dbMachines.Integer, primary_key=True)
     #An id based on floor
-    floor_id = dbMachines.Column(dbMachines.String(50), unique=True)
+    floor_id = dbMachines.Column(dbMachines.Integer, unique=True)
     dorm = dbMachines.Column(dbMachines.String(10))
     floor = dbMachines.Column(dbMachines.Integer)
     is_available = dbMachines.Column(dbMachines.Boolean)
