@@ -46,11 +46,11 @@ def test_deleteUser(app_context):
 
 def test_getMachineById(app_context):
     #create test machine
-    test_id = "1"
-    test_floorId= "1"
+    test_id = 1
+    test_floorId= 1
     test_dorm = "Sittner"
-    test_floor = "0"
-    test_isAvailable = "TRUE"
+    test_floor = 0
+    test_isAvailable = True
     test_lastServiceDate = "10/27/2022"
     test_installationDate = "10/27/2022"
     newMachine = Machines(id = test_id, floor_id = test_floorId, dorm = test_dorm, floor = test_floor, is_available = test_isAvailable, last_service_date = test_lastServiceDate, installation_date = test_installationDate)
@@ -58,7 +58,7 @@ def test_getMachineById(app_context):
     dbMachines.session.commit()
     response=app.test_client().get(f'/machines/{test_id}')
     assert response.status_code == 200
-    #need to add additional assert
+    assert response.data.decode('utf-8')=='[\"1\",\"1\",\"Sittner\",\"0\",\"True\",\"10/27/2022\",\"10/27/2022\"]\n'
 
 
 
