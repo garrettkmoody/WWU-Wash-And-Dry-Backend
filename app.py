@@ -1,5 +1,7 @@
 import datetime
 from functools import wraps
+from itertools import count
+from math import floor
 from flask import Flask, render_template, redirect, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
@@ -142,8 +144,20 @@ def get_machine_by_dorm_floor_floorid(requested_dorm, requested_floor, requested
 
 @app.route('/machines/<string:requested_dorm>/<int:requested_floor>', methods=['GET'])
 def get_machines_by_dorm_and_floor(requested_dorm, requested_floor):
-    machine_info = Machines.query.filter_by(floor = requested_floor, dorm = requested_dorm).get_or_404()
-    return [machine_info.id, machine_info.floor_id, machine_info.is_available]
+    machine_info = Machines.query.filter_by(floor = requested_floor, dorm = requested_dorm).all()
+    x= len(machine_info)
+    counter=0
+    request_objects = []
+    while x!=0:
+        request_return_object = []
+        request_return_object.append(machine_info[counter].id)
+        request_return_object.append(machine_info[counter].floor_id)
+        request_return_object.append(machine_info[counter].is_available)
+        request_objects.append(request_return_object)
+        x-=1
+        counter+=1
+        print(request_objects)
+    return request_objects
 
 @app.route('/machines/<string:requested_dorm>', methods=['GET'])
 def get_machines_by_dorm( requested_dorm):

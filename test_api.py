@@ -110,3 +110,32 @@ def test_getMachineByDormFloorFloorID(app_context):
     db.session.commit()
     assert response.status_code == 200
     assert response.data.decode('utf-8')=='[1,true]\n'
+
+def test_getMachinesByDormFloor(app_context):
+    test_id = [1, 2, 3]
+    test_floorId= [1, 2, 3]
+    test_dorm = "Sittner"
+    test_floor = 1
+    test_isAvailable = True
+    test_lastServiceDate = "10/27/2022"
+    test_installationDate = "10/27/2022"
+    newMachine = Machines(id = test_id[0], floor_id = test_floorId[0], dorm = test_dorm, floor = test_floor, is_available = test_isAvailable, last_service_date = test_lastServiceDate, installation_date = test_installationDate)
+    db.session.add(newMachine)
+    db.session.commit()
+    newMachine = Machines(id = test_id[1], floor_id = test_floorId[1], dorm = test_dorm, floor = test_floor, is_available = test_isAvailable, last_service_date = test_lastServiceDate, installation_date = test_installationDate)
+    db.session.add(newMachine)
+    db.session.commit()
+    newMachine = Machines(id = test_id[2], floor_id = test_floorId[2], dorm = test_dorm, floor = test_floor, is_available = test_isAvailable, last_service_date = test_lastServiceDate, installation_date = test_installationDate)
+    db.session.add(newMachine)
+    db.session.commit()
+    response = app.test_client().get(f'/machines/{test_dorm}/{test_floor}')
+    print(response)
+    Machines.query.filter_by(id = test_id[0]).delete()
+    db.session.commit()
+    Machines.query.filter_by(id = test_id[1]).delete()
+    db.session.commit()
+    Machines.query.filter_by(id = test_id[2]).delete()
+    db.session.commit()
+    assert response.status_code == 200
+    assert response.data.decode('utf-8')=='[[1,1,true],[2,2,true],[3,3,true]]\n'
+    
