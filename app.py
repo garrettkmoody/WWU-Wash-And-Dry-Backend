@@ -112,12 +112,17 @@ def get_machine_by_id(requested_id):
         floor_id= request.args.get('floor_id')
         dorm = request.args.get('dorm')
         floor = request.args.get('floor')
-        is_available = ('is_available')
-        last_service_date = ('last_service_data')
-        installation_date = ('installation_date')
-        newMachine = Machines(id = requested_id, floor_id = floor_id, dorm = dorm, floor = floor, is_available = is_available, last_service_date = last_service_date, installation_date = installation_date)
+        is_available = request.args.get('is_available')
+        last_service_date = request.args.get('last_service_date')
+        installation_date = request.args.get('installation_date')
+        newMachine = Machines(id = requested_id, floor_id = int(floor_id), dorm = dorm, floor = int(floor), is_available = bool(is_available), last_service_date = last_service_date, installation_date = installation_date)
         db.session.add(newMachine)
         db.session.commit()
+        get_request = Machines.query.filter_by(id = requested_id)
+        if get_request:
+            return f'created information for machine with ID: {requested_id}', 200
+        else: 
+            return f'could not create information for machine with ID: {requested_id}',404
     elif request.method == 'GET':
         machine_info= Machines.query.filter_by(id = requested_id).first_or_404()
         return [machine_info.id, machine_info.floor_id, machine_info.floor, machine_info.dorm, machine_info.is_available, machine_info.last_service_date, machine_info.installation_date]
@@ -127,7 +132,7 @@ def get_machine_by_id(requested_id):
         if delete_request:
             return f'deleted information for machine with ID: {requested_id}', 200
         else: 
-            return f'Could not find information for machine with ID: {requested_id}',404
+            return f'could not find information for machine with ID: {requested_id}',404
     
 
 @app.route('/machines/<string:requested_dorm>/<int:requested_floor>/<int:requested_floor_id>', methods=['GET'])

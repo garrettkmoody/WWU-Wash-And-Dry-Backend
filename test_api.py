@@ -26,7 +26,7 @@ def test_getUser(app_context):
     #send request to get information
     response=app.test_client().get(f'/user/{test_public_ID}')
     #get rid of test user from database
-    delete_Request=User.query.filter_by(public_id=test_public_ID).delete()
+    User.query.filter_by(public_id=test_public_ID).delete()
     db.session.commit()
     assert response.status_code==200
     assert response.data.decode('utf-8')=='[\"Hayden\",\"1\",\"Walla Walla\"]\n'
@@ -58,7 +58,7 @@ def test_getMachineById(app_context):
     db.session.add(newMachine)
     db.session.commit()
     response=app.test_client().get(f'/machines/{test_id}')
-    delete_Request=Machines.query.filter_by(id = test_id).delete()
+    Machines.query.filter_by(id = test_id).delete()
     db.session.commit()
     assert response.status_code == 200
     assert response.data.decode('utf-8')=='[1,1,0,\"Sittner\",true,\"10/27/2022\",\"10/27/2022\"]\n'
@@ -75,19 +75,21 @@ def test_deleteMachineById(app_context):
     db.session.add(newMachine)
     db.session.commit()
     response=app.test_client().delete(f'/machines/{test_id}')
+    Machines.query.filter_by(id = test_id).delete()
     assert response.status_code==200
     assert response.data.decode('utf-8')==f'deleted information for machine with ID: {test_id}'
 
-'''
+
 def test_createMachineById(app_context):
     test_id = 1
-    test_floorId= 1
+    test_floorId= '1'
     test_dorm = "Sittner"
-    test_floor = 0
-    test_isAvailable = TRUE
+    test_floor = '0'
+    test_isAvailable = 'True'
     test_lastServiceDate = "10/27/2022"
     test_installationDate = "10/27/2022"
-    response = app.test_client().post(f'/machines/{test_id}?floor_id={test_floorId}&dorm={test_dorm}&floor={test_floor}&is_available={test_isAvailable}&last_service_date={test_lastServiceDate}&installation_date={test_installationDate}')
-    
+    response = app.test_client().post(f'/machines/{test_id}', query_string = {'floor_id': test_floorId, 'dorm': test_dorm, 'floor':test_floor, 'is_available': test_isAvailable, 'last_service_date':test_lastServiceDate, 'installation_date': test_installationDate})
+    Machines.query.filter_by(id = test_id).delete()
+    db.session.commit()
     assert response.status_code==200
-'''
+    assert response.data.decode('utf-8')==f'created information for machine with ID: {test_id}'
