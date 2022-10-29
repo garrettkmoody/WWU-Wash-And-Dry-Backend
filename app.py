@@ -106,9 +106,19 @@ def callback():
         return redirect("http://www.google.com?error=AuthFailed")
 
 
-@app.route('/machines/<int:requested_id>', methods=['GET' , 'DELETE'])
+@app.route('/machines/<int:requested_id>', methods=['GET' , 'DELETE', 'POST'])
 def get_machine_by_id(requested_id):
-    if request.method == 'GET':
+    if request.method == 'POST':
+        floor_id= request.args.get('floor_id')
+        dorm = request.args.get('dorm')
+        floor = request.args.get('floor')
+        is_available = ('is_available')
+        last_service_date = ('last_service_data')
+        installation_date = ('installation_date')
+        newMachine = Machines(id = requested_id, floor_id = floor_id, dorm = dorm, floor = floor, is_available = is_available, last_service_date = last_service_date, installation_date = installation_date)
+        db.session.add(newMachine)
+        db.session.commit()
+    elif request.method == 'GET':
         machine_info= Machines.query.filter_by(id = requested_id).first_or_404()
         return [machine_info.id, machine_info.floor_id, machine_info.floor, machine_info.dorm, machine_info.is_available, machine_info.last_service_date, machine_info.installation_date]
     elif request.method == 'DELETE':
