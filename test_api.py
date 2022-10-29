@@ -93,3 +93,20 @@ def test_createMachineById(app_context):
     db.session.commit()
     assert response.status_code==200
     assert response.data.decode('utf-8')==f'created information for machine with ID: {test_id}'
+
+def test_getMachineByDormFloorFloorID(app_context):
+    test_id = 1
+    test_floorId= 1
+    test_dorm = "Sittner"
+    test_floor = 0
+    test_isAvailable = True
+    test_lastServiceDate = "10/27/2022"
+    test_installationDate = "10/27/2022"
+    newMachine = Machines(id = test_id, floor_id = test_floorId, dorm = test_dorm, floor = test_floor, is_available = test_isAvailable, last_service_date = test_lastServiceDate, installation_date = test_installationDate)
+    db.session.add(newMachine)
+    db.session.commit()
+    response = app.test_client().get(f'/machines/{test_dorm}/{test_floor}/{test_floorId}')
+    Machines.query.filter_by(id = test_id).delete()
+    db.session.commit()
+    assert response.status_code == 200
+    assert response.data.decode('utf-8')=='[1,true]\n'
