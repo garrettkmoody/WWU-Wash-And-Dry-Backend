@@ -156,13 +156,26 @@ def get_machines_by_dorm_and_floor(requested_dorm, requested_floor):
         request_objects.append(request_return_object)
         x-=1
         counter+=1
-        print(request_objects)
     return request_objects
 
 @app.route('/machines/<string:requested_dorm>', methods=['GET'])
 def get_machines_by_dorm( requested_dorm):
-    machine_info = Machines.query.filter_by(dorm = requested_dorm).get_or_404()
-    return [machine_info.id, machine_info.floor, machine_info.floor_id, machine_info.is_available]
+    machine_info = Machines.query.filter_by(dorm = requested_dorm).all()
+    x = len(machine_info)
+    counter = 0
+    request_objects = []
+    while x!= 0:
+        request_return_object = []
+        request_return_object.append(machine_info[counter].id)
+        request_return_object.append(machine_info[counter].floor)
+        request_return_object.append(machine_info[counter].floor_id)
+        request_return_object.append(machine_info[counter].is_available)
+        request_objects.append(request_return_object)
+        x-=1
+        counter +=1
+        print(request_objects)
+    return request_objects
+
 
 
 # Unprotected route, no token required
