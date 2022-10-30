@@ -1,8 +1,6 @@
 import datetime
 from functools import wraps
-from itertools import count
-from math import floor
-from flask import Flask, render_template, redirect, request, jsonify
+from flask import Flask, redirect, request, jsonify, flash
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 import jwt
@@ -11,45 +9,51 @@ import requests
 
 load_dotenv()
 app = Flask(__name__)
-app.config['SECRET_KEY'] = str(os.environ.get("SECRET_KEY"))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///User.db'
-app.config['SQLALCHEMY_BINDS'] = {'machines' : 'sqlite:///Machine.db'}
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
-app.config['AZURE_OAUTH_TENANCY'] = str(os.environ.get("TENANT_ID"))
-app.config['AZURE_OAUTH_CLIENT_SECRET'] = str(os.environ.get("CLIENT_SECRET"))
-app.config['AZURE_OAUTH_APPLICATION_ID'] = str(
-    os.environ.get("APPLICATION_ID"))
+app.config.from_mapping(
+    SECRET_KEY = str(os.environ.get("SECRET_KEY")),
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///User.db',
+    SQLALCHEMY_BINDS = {'machine' : 'sqlite:///Machine.db'},
+    SQLALCHEMY_TRACK_MODIFICATIONS = True,
+    AZURE_OAUTH_TENANCY = str(os.environ.get("TENANT_ID")),
+    AZURE_OAUTH_CLIENT_SECRET = str(os.environ.get("CLIENT_SECRET")),
+    AZURE_OAUTH_APPLICATION_ID = str(os.environ.get("APPLICATION_ID"))
+)
 
-#This might not need to be split
-db = SQLAlchemy(app)
 db = SQLAlchemy(app)
 
 class User(db.Model):
-    #The tablename may be unnecessary 
     id = db.Column(db.Integer, primary_key=True)
     public_id = db.Column(db.String(50), unique=True)
     name = db.Column(db.String(100))
     email = db.Column(db.String(70), unique=True)
+    def __init__(self, id, public_id, name, email):
+        self.id = id
+        self.public_id = public_id
+        self.name = name
+        self.email = email
 
-class Machines(db.Model):
-    __bind_key__ = 'machines'
-    #Unique id for each machine
+class Machine(db.Model):
+    __bind_key__ = 'machine'
     id = db.Column(db.Integer, primary_key=True)
-    #An id based on floor
     floor_id = db.Column(db.Integer)
     dorm = db.Column(db.String(10))
     floor = db.Column(db.Integer)
     is_available = db.Column(db.Boolean)
     last_service_date = db.Column(db.String)
     installation_date = db.Column(db.String)
+    def __init__(self, id, floor_id, dorm, floor, is_available, last_sevice_date, installation_date):
+        self.id = id
+        self.floor_id = floor_id
+        self.dorm = dorm
+        self.floor = floor
+        self.is_available = is_available
+        self.last_service_date = last_sevice_date
+        self.installation_date = installation_date
 
 with app.app_context():
     db.create_all()
 
-
 # Token Function Decorator
-
-
 def token_required(f):
     @wraps(f)
     def decorator(*args, **kwargs):
@@ -69,8 +73,6 @@ def token_required(f):
     return decorator
 
 # Callback URI for Azure AD
-
-
 @app.route("/login/callback")
 def callback():
     if request.args.get("error"):
@@ -108,43 +110,57 @@ def callback():
         return redirect("http://www.google.com?error=AuthFailed")
 
 
-@app.route('/machines/<int:requested_id>', methods=['GET' , 'DELETE', 'POST'])
-def get_machine_by_id(requested_id):
+@app.route('/machine/<int:requested_id>', methods=['GET' , 'DELETE', 'POST'])
+def machine_by_id(requested_id):
     if request.method == 'POST':
-        floor_id= request.args.get('floor_id')
+        #Accepting Parameter Arguments
+        floor_id = request.args.get('floor_id')
         dorm = request.args.get('dorm')
-        floor = request.args.get('floor')
+        floor = request.args.get('floor', None)
         is_available = request.args.get('is_available')
         last_service_date = request.args.get('last_service_date')
         installation_date = request.args.get('installation_date')
-        newMachine = Machines(id = requested_id, floor_id = int(floor_id), dorm = dorm, floor = int(floor), is_available = bool(is_available), last_service_date = last_service_date, installation_date = installation_date)
-        db.session.add(newMachine)
-        db.session.commit()
-        get_request = Machines.query.filter_by(id = requested_id)
-        if get_request:
-            return f'created information for machine with ID: {requested_id}', 200
-        else: 
-            return f'could not create information for machine with ID: {requested_id}',404
+        error = None
+        #Checking Parameter Arguments
+        if not floor_id:
+            error = 'floor_id is required'
+        elif not dorm:
+            error = 'dorm is required'
+        elif not floor:
+            error = 'floor is required'
+        elif not is_available:
+            error = 'is_available is required'
+        elif not installation_date:
+            error = 'installation_date is required'
+        #Parameter Arguments are valid, attempt to create user
+        if error is None:
+            try:
+                newMachine = Machine(requested_id, int(floor_id), dorm, int(floor), bool(is_available), last_service_date, installation_date)
+                db.session.add(newMachine)
+                db.session.commit()
+            except db.IntegrityError:
+                error = f"Machine {requested_id} is already registered."
+        flash(error)
+        return f'created information for machine with ID: {requested_id}', 200
     elif request.method == 'GET':
-        machine_info= Machines.query.filter_by(id = requested_id).first_or_404()
+        machine_info= Machine.query.filter_by(id = requested_id).first_or_404()
         return [machine_info.id, machine_info.floor_id, machine_info.floor, machine_info.dorm, machine_info.is_available, machine_info.last_service_date, machine_info.installation_date]
     elif request.method == 'DELETE':
-        delete_request = Machines.query.filter_by(id = requested_id).delete()
+        delete_request = Machine.query.filter_by(id = requested_id).delete()
         db.session.commit()
         if delete_request:
             return f'deleted information for machine with ID: {requested_id}', 200
         else: 
             return f'could not find information for machine with ID: {requested_id}',404
-    
 
-@app.route('/machines/<string:requested_dorm>/<int:requested_floor>/<int:requested_floor_id>', methods=['GET'])
-def get_machine_by_dorm_floor_floorid(requested_dorm, requested_floor, requested_floor_id):
-    machine_info = Machines.query.filter_by(floor_id = requested_floor_id, floor = requested_floor, dorm = requested_dorm).first_or_404()
+@app.route('/machine/<string:requested_dorm>/<int:requested_floor>/<int:requested_floor_id>', methods=['GET'])
+def machine_by_dorm_floor_floorid(requested_dorm, requested_floor, requested_floor_id):
+    machine_info = Machine.query.filter_by(floor_id = requested_floor_id, floor = requested_floor, dorm = requested_dorm).first_or_404()
     return [machine_info.id, machine_info.is_available]
 
-@app.route('/machines/<string:requested_dorm>/<int:requested_floor>', methods=['GET'])
-def get_machines_by_dorm_and_floor(requested_dorm, requested_floor):
-    machine_info = Machines.query.filter_by(floor = requested_floor, dorm = requested_dorm).all()
+@app.route('/machine/<string:requested_dorm>/<int:requested_floor>', methods=['GET'])
+def machines_by_dorm_and_floor(requested_dorm, requested_floor):
+    machine_info = Machine.query.filter_by(floor = requested_floor, dorm = requested_dorm).all()
     x= len(machine_info)
     counter=0
     request_objects = []
@@ -158,9 +174,9 @@ def get_machines_by_dorm_and_floor(requested_dorm, requested_floor):
         counter+=1
     return request_objects
 
-@app.route('/machines/<string:requested_dorm>', methods=['GET'])
-def get_machines_by_dorm( requested_dorm):
-    machine_info = Machines.query.filter_by(dorm = requested_dorm).all()
+@app.route('/machine/<string:requested_dorm>', methods=['GET'])
+def machines_by_dorm( requested_dorm):
+    machine_info = Machine.query.filter_by(dorm = requested_dorm).all()
     x = len(machine_info)
     counter = 0
     request_objects = []
@@ -173,28 +189,21 @@ def get_machines_by_dorm( requested_dorm):
         request_objects.append(request_return_object)
         x-=1
         counter +=1
-        print(request_objects)
     return request_objects
 
-
-
 # Unprotected route, no token required
-
-
 @app.route('/unprotected')
 def unprotected():
     return 'No Token No problem!'
 
 # Protected route, token required
-
-
 @app.route('/protected')
 @token_required
 def protected(current_user):
     return 'Hello ' + current_user.name
 
 @app.route('/user/<requested_UserID>',methods=['GET','DELETE'])
-def get_user(requested_UserID):
+def user_by_id(requested_UserID):
     if request.method=='GET':
         #Filter can be changed later to be more secure
         #First_or_404 will abort if not found and send a 404
@@ -208,7 +217,6 @@ def get_user(requested_UserID):
             return f'deleted information for user with ID: {requested_UserID}', 200
         else: 
             return f'Could not find information for User with ID: {requested_UserID}',404
-
 
 # main driver function
 if __name__ == '__main__':
