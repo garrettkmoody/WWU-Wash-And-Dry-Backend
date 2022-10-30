@@ -1,8 +1,6 @@
 import datetime
 from functools import wraps
-from itertools import count
-from math import floor
-from flask import Flask, render_template, redirect, request, jsonify
+from flask import Flask, redirect, request, jsonify, flash
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 import jwt
@@ -110,20 +108,35 @@ def callback():
 @app.route('/machines/<int:requested_id>', methods=['GET' , 'DELETE', 'POST'])
 def get_machine_by_id(requested_id):
     if request.method == 'POST':
-        floor_id= request.args.get('floor_id')
+        #Accepting Parameter Arguments
+        floor_id = request.args.get('floor_id')
         dorm = request.args.get('dorm')
-        floor = request.args.get('floor')
+        floor = request.args.get('floor', None)
         is_available = request.args.get('is_available')
         last_service_date = request.args.get('last_service_date')
         installation_date = request.args.get('installation_date')
-        newMachine = Machines(id = requested_id, floor_id = int(floor_id), dorm = dorm, floor = int(floor), is_available = bool(is_available), last_service_date = last_service_date, installation_date = installation_date)
-        db.session.add(newMachine)
-        db.session.commit()
-        get_request = Machines.query.filter_by(id = requested_id)
-        if get_request:
-            return f'created information for machine with ID: {requested_id}', 200
-        else: 
-            return f'could not create information for machine with ID: {requested_id}',404
+        error = None
+        #Checking Parameter Arguments
+        if not floor_id:
+            error = 'floor_id is required'
+        elif not dorm:
+            error = 'dorm is required'
+        elif not floor:
+            error = 'floor is required'
+        elif not is_available:
+            error = 'is_available is required'
+        elif not installation_date:
+            error = 'installation_date is required'
+        #Parameter Arguments are valid, attempt to create user
+        if error is None:
+            try:
+                newMachine = Machines(id = requested_id, floor_id = int(floor_id), dorm = dorm, floor = int(floor), is_available = bool(is_available), last_service_date = last_service_date, installation_date = installation_date)
+                db.session.add(newMachine)
+                db.session.commit()
+            except db.IntegrityError:
+                error = f"Machine {requested_id} is already registered."
+        flash(error)
+        return f'created information for machine with ID: {requested_id}', 200
     elif request.method == 'GET':
         machine_info= Machines.query.filter_by(id = requested_id).first_or_404()
         return [machine_info.id, machine_info.floor_id, machine_info.floor, machine_info.dorm, machine_info.is_available, machine_info.last_service_date, machine_info.installation_date]
