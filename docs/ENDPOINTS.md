@@ -1,8 +1,8 @@
 # Available Endpoints
 
-> ## **GET** /machines
+> ## **GET** /machine
 
-Gets a list of all machines and details about them
+Gets a list of all machine and details about them
 
 > **HEADERS**  
 
@@ -44,9 +44,9 @@ Gets information about a user
 > **RESPONSE**
 - *Returns information about the User*
 
->## **GET** /machines/sittner/<floor>
+>## **GET** /machine/sittner/<floor>
 
-Gets a list of machines and their details by floor in sittner
+Gets a list of machine and their details by floor in sittner
 
 > **HEADERS**
 
@@ -61,9 +61,9 @@ Gets a list of machines and their details by floor in sittner
 
 Returns a list of machine objects from the sittner dorm
 
->## **GET** /machines/foreman/<floor>
+>## **GET** /machine/foreman/<floor>
 
-Gets a list of machines and their details 
+Gets a list of machine and their details 
 
 > **HEADERS**
 
@@ -76,7 +76,7 @@ Gets a list of machines and their details
 
  > **RESPONSE**
 
- Returns a list of machines objects by floor from the foreman dorm
+ Returns a list of machine objects by floor from the foreman dorm
 
 >## **GET** /machine/<id>
 
