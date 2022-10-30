@@ -11,17 +11,16 @@ import requests
 
 load_dotenv()
 app = Flask(__name__)
-app.config['SECRET_KEY'] = str(os.environ.get("SECRET_KEY"))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///User.db'
-app.config['SQLALCHEMY_BINDS'] = {'machines' : 'sqlite:///Machine.db'}
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
-app.config['AZURE_OAUTH_TENANCY'] = str(os.environ.get("TENANT_ID"))
-app.config['AZURE_OAUTH_CLIENT_SECRET'] = str(os.environ.get("CLIENT_SECRET"))
-app.config['AZURE_OAUTH_APPLICATION_ID'] = str(
-    os.environ.get("APPLICATION_ID"))
+app.config.from_mapping(
+    SECRET_KEY = str(os.environ.get("SECRET_KEY")),
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///User.db',
+    SQLALCHEMY_BINDS = {'machines' : 'sqlite:///Machine.db'},
+    SQLALCHEMY_TRACK_MODIFICATIONS = True,
+    AZURE_OAUTH_TENANCY = str(os.environ.get("TENANT_ID")),
+    AZURE_OAUTH_CLIENT_SECRET = str(os.environ.get("CLIENT_SECRET")),
+    AZURE_OAUTH_APPLICATION_ID = str(os.environ.get("APPLICATION_ID"))
+)
 
-#This might not need to be split
-db = SQLAlchemy(app)
 db = SQLAlchemy(app)
 
 class User(db.Model):
