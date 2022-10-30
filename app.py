@@ -1,5 +1,7 @@
 import datetime
 from functools import wraps
+from itertools import count
+from math import floor
 from flask import Flask, render_template, redirect, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
@@ -106,9 +108,24 @@ def callback():
         return redirect("http://www.google.com?error=AuthFailed")
 
 
-@app.route('/machines/<int:requested_id>', methods=['GET' , 'DELETE'])
+@app.route('/machines/<int:requested_id>', methods=['GET' , 'DELETE', 'POST'])
 def get_machine_by_id(requested_id):
-    if request.method == 'GET':
+    if request.method == 'POST':
+        floor_id= request.args.get('floor_id')
+        dorm = request.args.get('dorm')
+        floor = request.args.get('floor')
+        is_available = request.args.get('is_available')
+        last_service_date = request.args.get('last_service_date')
+        installation_date = request.args.get('installation_date')
+        newMachine = Machines(id = requested_id, floor_id = int(floor_id), dorm = dorm, floor = int(floor), is_available = bool(is_available), last_service_date = last_service_date, installation_date = installation_date)
+        db.session.add(newMachine)
+        db.session.commit()
+        get_request = Machines.query.filter_by(id = requested_id)
+        if get_request:
+            return f'created information for machine with ID: {requested_id}', 200
+        else: 
+            return f'could not create information for machine with ID: {requested_id}',404
+    elif request.method == 'GET':
         machine_info= Machines.query.filter_by(id = requested_id).first_or_404()
         return [machine_info.id, machine_info.floor_id, machine_info.floor, machine_info.dorm, machine_info.is_available, machine_info.last_service_date, machine_info.installation_date]
     elif request.method == 'DELETE':
@@ -117,7 +134,7 @@ def get_machine_by_id(requested_id):
         if delete_request:
             return f'deleted information for machine with ID: {requested_id}', 200
         else: 
-            return f'Could not find information for machine with ID: {requested_id}',404
+            return f'could not find information for machine with ID: {requested_id}',404
     
 
 @app.route('/machines/<string:requested_dorm>/<int:requested_floor>/<int:requested_floor_id>', methods=['GET'])
@@ -127,13 +144,38 @@ def get_machine_by_dorm_floor_floorid(requested_dorm, requested_floor, requested
 
 @app.route('/machines/<string:requested_dorm>/<int:requested_floor>', methods=['GET'])
 def get_machines_by_dorm_and_floor(requested_dorm, requested_floor):
-    machine_info = Machines.query.filter_by(floor = requested_floor, dorm = requested_dorm).get_or_404()
-    return [machine_info.id, machine_info.floor_id, machine_info.is_available]
+    machine_info = Machines.query.filter_by(floor = requested_floor, dorm = requested_dorm).all()
+    x= len(machine_info)
+    counter=0
+    request_objects = []
+    while x!=0:
+        request_return_object = []
+        request_return_object.append(machine_info[counter].id)
+        request_return_object.append(machine_info[counter].floor_id)
+        request_return_object.append(machine_info[counter].is_available)
+        request_objects.append(request_return_object)
+        x-=1
+        counter+=1
+    return request_objects
 
 @app.route('/machines/<string:requested_dorm>', methods=['GET'])
 def get_machines_by_dorm( requested_dorm):
-    machine_info = Machines.query.filter_by(dorm = requested_dorm).get_or_404()
-    return [machine_info.id, machine_info.floor, machine_info.floor_id, machine_info.is_available]
+    machine_info = Machines.query.filter_by(dorm = requested_dorm).all()
+    x = len(machine_info)
+    counter = 0
+    request_objects = []
+    while x!= 0:
+        request_return_object = []
+        request_return_object.append(machine_info[counter].id)
+        request_return_object.append(machine_info[counter].floor)
+        request_return_object.append(machine_info[counter].floor_id)
+        request_return_object.append(machine_info[counter].is_available)
+        request_objects.append(request_return_object)
+        x-=1
+        counter +=1
+        print(request_objects)
+    return request_objects
+
 
 
 # Unprotected route, no token required
