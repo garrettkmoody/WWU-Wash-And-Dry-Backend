@@ -1,5 +1,6 @@
-from app import app, User, db, Machine
+from app import app, User, db, Machine, send_email
 import pytest
+import json
 
 #Test Parameters for User
 user_test_id = 1
@@ -16,17 +17,26 @@ machine_test_isAvailable = True
 machine_test_lastServiceDate = "10/27/2022"
 machine_test_installationDate = "10/27/2022"
 
-def test_unprotected_route():
-    response = app.test_client().get('/unprotected')
-    assert response.status_code == 200
-    assert response.data.decode('utf-8') == 'No Token No problem!'
+#Test Parameters for Emails
+recipients=['WWU-Wash-And-Dry@outlook.com']
+body='Testing email'
+subject='Testing'
 
 #This pytest fixture allows us to update database within our test file. 
 @pytest.fixture ()
 def app_context():
     with app.app_context():
         yield
-        
+
+def test_send_email(app_context):
+    response=send_email(True, subject, body, recipients)
+    assert json.loads(response.data)=={"body":"Testing email","recipients":["WWU-Wash-And-Dry@outlook.com"],"subject":"Testing"}
+    
+def test_unprotected_route():
+    response = app.test_client().get('/unprotected')
+    assert response.status_code == 200
+    assert response.data.decode('utf-8') == 'No Token No problem!'
+ 
 def test_getUser(app_context):
     #create test user
     newUser = User(user_test_id, user_test_public_ID, user_test_name, user_test_email)

@@ -1,6 +1,8 @@
 flask
 flask_sqlalchemy
+flask-mail
 python-dotenv
 pyjwt
 requests
 pytest
+json

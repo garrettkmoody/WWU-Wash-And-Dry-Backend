@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import jwt
 import os
 import requests
+from flask_mail import Mail, Message
 
 load_dotenv()
 app = Flask(__name__)
@@ -18,8 +19,36 @@ app.config.from_mapping(
     AZURE_OAUTH_CLIENT_SECRET = str(os.environ.get("CLIENT_SECRET")),
     AZURE_OAUTH_APPLICATION_ID = str(os.environ.get("APPLICATION_ID"))
 )
-
+mail_settings = {
+    "MAIL_SERVER": 'smtp.office365.com',
+    "MAIL_PORT": 587,
+    "MAIL_USE_TLS": True,
+    "MAIL_USE_SSL": False,
+    "MAIL_USERNAME": os.environ['EMAIL_USER'],
+    "MAIL_PASSWORD": os.environ['EMAIL_PASSWORD']
+}
+app.config.update(mail_settings)
+mail=Mail(app)
 db = SQLAlchemy(app)
+
+def send_email(testing,msg_subject,msg_body,msg_recipients):
+    """
+    Sends an email from WWU-Wash-And-Dry@outlook.com
+    Args:
+        testing is a bool that will not send an email to recipients when true
+        msg_subject is a string will be the subject of the email
+        msg_body is a string that will be the body of the email
+        msg_recipients is a list of strings of email addresses that will receive the email
+    """
+    if testing:
+        app.config.update({"MAIL_SUPPRESS_SEND":True})
+        mail=Mail(app)
+    else:
+        app.config.update({"MAIL_SUPPRESS_SEND":False})
+        mail=Mail(app)
+    email=Message(subject=msg_subject,body=msg_body,sender='WWU-Wash-And-Dry@outlook.com',recipients=msg_recipients)
+    mail.send(email)
+    return jsonify({'body':email.body,'recipients':email.recipients,'subject':email.subject})
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -31,7 +60,6 @@ class User(db.Model):
         self.public_id = public_id
         self.name = name
         self.email = email
-
 class Machine(db.Model):
     __bind_key__ = 'machine'
     id = db.Column(db.Integer, primary_key=True)
@@ -190,7 +218,9 @@ def machines_by_dorm( requested_dorm):
         x-=1
         counter +=1
     return request_objects
-
+@app.route('/test_email')
+def test_email():
+    return send_email(False,"Test_email endpoint","Endpoint works",['WWU-Wash-And-Dry@outlook.com'])
 # Unprotected route, no token required
 @app.route('/unprotected')
 def unprotected():
