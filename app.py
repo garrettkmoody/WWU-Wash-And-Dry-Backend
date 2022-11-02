@@ -44,16 +44,21 @@ def send_email(testing,msg_subject,msg_body,msg_recipients):
         msg_subject is a string will be the subject of the email
         msg_body is a string that will be the body of the email
         msg_recipients is a list of strings of email addresses that will receive the email
+    Returns a confirmation message with a 200 status code if the email was successful
+    and if there was an error it will return an error message with 400 status code
     """
-    if testing:
-        app.config.update({"MAIL_SUPPRESS_SEND":True})
-        mail=Mail(app)
-    else:
-        app.config.update({"MAIL_SUPPRESS_SEND":False})
-        mail=Mail(app)
-    email=Message(subject=msg_subject,body=msg_body,sender='WWU-Wash-And-Dry@outlook.com',recipients=msg_recipients)
-    mail.send(email)
-    return jsonify({'body':email.body,'recipients':email.recipients,'subject':email.subject})
+    try:
+        if testing:
+            app.config.update({"MAIL_SUPPRESS_SEND":True})
+            mail=Mail(app)
+        else:
+            app.config.update({"MAIL_SUPPRESS_SEND":False})
+            mail=Mail(app)
+        email=Message(subject=msg_subject,body=msg_body,sender='WWU-Wash-And-Dry@outlook.com',recipients=msg_recipients)
+        mail.send(email)
+        return jsonify(f'Email was successfully sent', 200)
+    except:
+        return jsonify(f'Could not send email.', 400)
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)

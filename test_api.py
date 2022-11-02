@@ -30,8 +30,12 @@ def app_context():
 
 def test_send_email(app_context):
     response=send_email(True, subject, body, recipients)
-    assert json.loads(response.data)=={"body":"Testing email","recipients":["WWU-Wash-And-Dry@outlook.com"],"subject":"Testing"}
-    
+    assert json.loads(response.data)==['Email was successfully sent',200]
+
+def test_email_failure(app_context):
+    response=send_email(True, subject, body, [])
+    assert json.loads(response.data)==['Could not send email.', 400]
+
 def test_unprotected_route():
     response = app.test_client().get('/unprotected')
     assert response.status_code == 200
