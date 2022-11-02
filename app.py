@@ -19,13 +19,18 @@ app.config.from_mapping(
     AZURE_OAUTH_CLIENT_SECRET = str(os.environ.get("CLIENT_SECRET")),
     AZURE_OAUTH_APPLICATION_ID = str(os.environ.get("APPLICATION_ID"))
 )
+try: 
+    MAIL_PASSWORD=os.environ.get('EMAIL_PASSWORD')
+except:
+    MAIL_PASSWORD=os.environ('EMAIL_PASSWORD')
+
 mail_settings = {
     "MAIL_SERVER": 'smtp.office365.com',
     "MAIL_PORT": 587,
     "MAIL_USE_TLS": True,
     "MAIL_USE_SSL": False,
-    "MAIL_USERNAME": os.environ['EMAIL_USER'],
-    "MAIL_PASSWORD": os.environ['EMAIL_PASSWORD']
+    "MAIL_USERNAME": 'WWU-Wash-And-Dry@outlook.com',
+    "MAIL_PASSWORD":MAIL_PASSWORD
 }
 app.config.update(mail_settings)
 mail=Mail(app)
