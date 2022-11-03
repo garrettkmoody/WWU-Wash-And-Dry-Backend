@@ -1,6 +1,6 @@
 import datetime
 from functools import wraps
-from flask import Flask, redirect, request, jsonify, flash
+from flask import Flask, redirect, request, jsonify, flash, abort, make_response
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 import jwt
@@ -56,9 +56,9 @@ def send_email(testing,msg_subject,msg_body,msg_recipients):
             mail=Mail(app)
         email=Message(subject=msg_subject,body=msg_body,sender='WWU-Wash-And-Dry@outlook.com',recipients=msg_recipients)
         mail.send(email)
-        return jsonify(f'Email was successfully sent', 200)
+        return jsonify(f'Email was successfully sent')
     except:
-        return jsonify(f'Could not send email.', 400)
+        return make_response("Could not send email.",400)
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -179,22 +179,22 @@ def machine_by_id(requested_id):
             except db.IntegrityError:
                 error = f"Machine {requested_id} is already registered."
         flash(error)
-        return f'created information for machine with ID: {requested_id}', 200
+        return jsonify(f'created information for machine with ID: {requested_id}')
     elif request.method == 'GET':
         machine_info= Machine.query.filter_by(id = requested_id).first_or_404()
-        return [machine_info.id, machine_info.floor_id, machine_info.floor, machine_info.dorm, machine_info.is_available, machine_info.last_service_date, machine_info.installation_date]
+        return jsonify({'ID':machine_info.id, 'Floor_ID':machine_info.floor_id,'Floor': machine_info.floor,'Dorm':machine_info.dorm,'Is_Available': machine_info.is_available,'Last_Service_Date':machine_info.last_service_date, 'Installation_Date':machine_info.installation_date})
     elif request.method == 'DELETE':
         delete_request = Machine.query.filter_by(id = requested_id).delete()
         db.session.commit()
         if delete_request:
-            return f'deleted information for machine with ID: {requested_id}', 200
+            return jsonify(f'deleted information for machine with ID: {requested_id}')
         else: 
-            return f'could not find information for machine with ID: {requested_id}',404
+            abort(404)
 
 @app.route('/machine/<string:requested_dorm>/<int:requested_floor>/<int:requested_floor_id>', methods=['GET'])
 def machine_by_dorm_floor_floorid(requested_dorm, requested_floor, requested_floor_id):
     machine_info = Machine.query.filter_by(floor_id = requested_floor_id, floor = requested_floor, dorm = requested_dorm).first_or_404()
-    return [machine_info.id, machine_info.is_available]
+    return jsonify([machine_info.id, machine_info.is_available])
 
 @app.route('/machine/<string:requested_dorm>/<int:requested_floor>', methods=['GET'])
 def machines_by_dorm_and_floor(requested_dorm, requested_floor):
@@ -210,7 +210,7 @@ def machines_by_dorm_and_floor(requested_dorm, requested_floor):
         request_objects.append(request_return_object)
         x-=1
         counter+=1
-    return request_objects
+    return jsonify(request_objects)
 
 @app.route('/machine/<string:requested_dorm>', methods=['GET'])
 def machines_by_dorm( requested_dorm):
@@ -227,36 +227,55 @@ def machines_by_dorm( requested_dorm):
         request_objects.append(request_return_object)
         x-=1
         counter +=1
-    return request_objects
+    return jsonify(request_objects)
+
 @app.route('/test_email')
+#Remove this endpoint in the future when we implement a way for machines to send emails
 def test_email():
     return send_email(False,"Test_email endpoint","Endpoint works",['WWU-Wash-And-Dry@outlook.com'])
+
 # Unprotected route, no token required
 @app.route('/unprotected')
 def unprotected():
-    return 'No Token No problem!'
+    return jsonify('No Token No problem!')
 
 # Protected route, token required
 @app.route('/protected')
 @token_required
 def protected(current_user):
-    return 'Hello ' + current_user.name
+    return jsonify('Hello ' + current_user.name)
 
-@app.route('/user/<requested_UserID>',methods=['GET','DELETE'])
-def user_by_id(requested_UserID):
+@app.route('/user/<requested_Public_UserID>',methods=['GET','DELETE'])
+def user_by_id(requested_Public_UserID):
     if request.method=='GET':
         #Filter can be changed later to be more secure
         #First_or_404 will abort if not found and send a 404
-        user_info=User.query.filter_by(public_id=requested_UserID).first_or_404()
-        return [user_info.name,user_info.public_id,user_info.email]
+        user_info=User.query.filter_by(public_id=requested_Public_UserID).first_or_404()
+        return jsonify({'Name':user_info.name,'Public_ID':user_info.public_id,'Email':user_info.email})
     elif request.method=='DELETE':
         #Filter can be changed later to be more secure
-        delete_Request=User.query.filter_by(public_id=requested_UserID).delete()
+        delete_Request=User.query.filter_by(public_id=requested_Public_UserID).delete()
         db.session.commit()
         if delete_Request:
-            return f'deleted information for user with ID: {requested_UserID}', 200
+            return jsonify(f'deleted information for user with ID: {requested_Public_UserID}')
         else: 
-            return f'Could not find information for User with ID: {requested_UserID}',404
+            abort(404)
+
+#not found error
+@app.errorhandler(404)
+def catch_not_found(e):
+    return jsonify('Error 404 not found')
+
+#bad request error
+@app.errorhandler(400)
+def catch_bad_requests(e):
+    return jsonify('Error 400, bad request')
+
+#internal server error
+@app.errorhandler(500)
+def catch_server_errors(e):
+    return jsonify('Error 500, something went wrong with server')
+
 
 # main driver function
 if __name__ == '__main__':
