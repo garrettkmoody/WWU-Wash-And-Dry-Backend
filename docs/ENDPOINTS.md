@@ -59,7 +59,7 @@ Gets a list of machine and their details by floor in sittner
 > **PARAMETERS**
 
 - floor
-- id???
+- ID???
 
 > **RESPONSE**
 
@@ -76,7 +76,7 @@ Gets a list of machine and their details
 > **PARAMETERS**
 
 - floor
-- id???
+- ID???
 
 > **RESPONSE**
 
@@ -84,7 +84,7 @@ Returns a list of machine objects by floor from the foreman dorm
 
 > ## **GET** /machine/<id>
 
-Gets a specific machine by that machine's id number
+Gets a specific machine by that machine's ID number
 
 > **HEADERS**
 
@@ -96,7 +96,7 @@ Gets a specific machine by that machine's id number
 
 > **RESPONSE**
 
-Returns a specific machine object by id number
+Returns a specific machine object by ID number
 
 ## **DELETE** /machine/<id>
 
@@ -108,7 +108,7 @@ Deletes a Machine
 
 > **PARAMETERS**
 
-- id
+- ID
 
 > **RESPONSE**
 
@@ -124,7 +124,7 @@ Modifies preferance for user
 
 > **PARAMETERS**
 
-- preferance id
+- preferance ID
 
 > **RESPONSE**
 

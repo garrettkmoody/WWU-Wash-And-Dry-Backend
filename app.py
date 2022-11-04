@@ -3,11 +3,11 @@ import os
 from functools import wraps
 import jwt
 import requests
+
 from dotenv import load_dotenv
 from flask import Flask, redirect, request, jsonify, flash, abort, make_response
 from flask_mail import Mail, Message
 from flask_sqlalchemy import SQLAlchemy
-
 
 load_dotenv()
 app = Flask(__name__)
@@ -63,7 +63,7 @@ def send_email(testing, msg_subject, msg_body, msg_recipients):
             recipients=msg_recipients,
         )
         mail.send(email)
-        return jsonify(f"Email was successfully sent")
+        return jsonify("Email was successfully sent")
     except:
         return make_response("Could not send email.", 400)
 
@@ -112,6 +112,7 @@ class Machine(db.Model):
 
 with app.app_context():
     db.create_all()
+
 
 # Token Function Decorator
 def token_required(f):

@@ -1,5 +1,6 @@
 import json
 import pytest
+
 from app import app, User, db, Machine, send_email
 
 # Test Parameters for User
@@ -22,6 +23,7 @@ recipients = ["WWU-Wash-And-Dry@outlook.com"]
 body = "Testing email"
 subject = "Testing"
 
+
 # This pytest fixture allows us to update database within our test file.
 @pytest.fixture()
 def app_context():
@@ -32,7 +34,7 @@ def app_context():
 def test_send_email(app_context):
     response = send_email(True, subject, body, recipients)
     assert response.status_code == 200
-    assert json.loads(response.data) == f"Email was successfully sent"
+    assert json.loads(response.data) == "Email was successfully sent"
 
 
 def test_email_failure(app_context):
