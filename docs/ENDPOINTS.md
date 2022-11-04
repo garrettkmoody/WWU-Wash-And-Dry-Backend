@@ -4,47 +4,49 @@
 
 Gets a list of all machine and details about them
 
-> **HEADERS**  
+> **HEADERS**
 
 - **Authorization** : Bearer {Token}
 
 > **PARAMETERS**
 
-***NONE***
+**_NONE_**
 
 > **RESPONSE**
 
 > ## **Delete** /user
 
-Deletes a user 
+Deletes a user
 
-> **HEADERS**  
-
-- **Authorization** from Single Sign On 
-
-> **PARAMETERS**
-
-- ***UserID***
-
-> **RESPONSE**
-- *Successfully deleted user*
-
-> ## **GET** /user
-
-Gets information about a user
-
-> **HEADERS**  
+> **HEADERS**
 
 - **Authorization** from Single Sign On
 
 > **PARAMETERS**
 
-- ***UserID***
+- **_UserID_**
 
 > **RESPONSE**
-- *Returns information about the User*
 
->## **GET** /machine/sittner/<floor>
+- _Successfully deleted user_
+
+> ## **GET** /user
+
+Gets information about a user
+
+> **HEADERS**
+
+- **Authorization** from Single Sign On
+
+> **PARAMETERS**
+
+- **_UserID_**
+
+> **RESPONSE**
+
+- _Returns information about the User_
+
+> ## **GET** /machine/sittner/<floor>
 
 Gets a list of machine and their details by floor in sittner
 
@@ -61,24 +63,24 @@ Gets a list of machine and their details by floor in sittner
 
 Returns a list of machine objects from the sittner dorm
 
->## **GET** /machine/foreman/<floor>
+> ## **GET** /machine/foreman/<floor>
 
-Gets a list of machine and their details 
+Gets a list of machine and their details
 
 > **HEADERS**
 
- - **Authorization** : User {token}
+- **Authorization** : User {token}
 
- > **PARAMETERS**
+> **PARAMETERS**
 
- - floor
- - id???
+- floor
+- id???
 
- > **RESPONSE**
+> **RESPONSE**
 
- Returns a list of machine objects by floor from the foreman dorm
+Returns a list of machine objects by floor from the foreman dorm
 
->## **GET** /machine/<id>
+> ## **GET** /machine/<id>
 
 Gets a specific machine by that machine's id number
 
@@ -98,22 +100,23 @@ Returns a specific machine object by id number
 
 Deletes a Machine
 
-> **HEADERS**  
+> **HEADERS**
 
-- **Authorization** : Admin 
+- **Authorization** : Admin
 
 > **PARAMETERS**
 
 - id
 
 > **RESPONSE**
-- *Successfully Deleted Machine*
+
+- _Successfully Deleted Machine_
 
 ## **Put** /user/<id>
 
 Modifies preferance for user
 
-> **HEADERS**  
+> **HEADERS**
 
 - **Authorization** : Bearer {token}
 
@@ -122,4 +125,5 @@ Modifies preferance for user
 - preferance id
 
 > **RESPONSE**
-- *Successfully Changes Preferance for user*
+
+- _Successfully Changes Preferance for user_
