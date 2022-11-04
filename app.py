@@ -1,12 +1,13 @@
 import datetime
-from functools import wraps
-from flask import Flask, redirect, request, jsonify, flash, abort, make_response
-from flask_sqlalchemy import SQLAlchemy
-from dotenv import load_dotenv
-import jwt
 import os
+from functools import wraps
+import jwt
 import requests
+from dotenv import load_dotenv
+from flask import Flask, redirect, request, jsonify, flash, abort, make_response
 from flask_mail import Mail, Message
+from flask_sqlalchemy import SQLAlchemy
+
 
 load_dotenv()
 app = Flask(__name__)

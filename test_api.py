@@ -1,6 +1,6 @@
-from app import app, User, db, Machine, send_email
-import pytest
 import json
+import pytest
+from app import app, User, db, Machine, send_email
 
 # Test Parameters for User
 user_test_id = 1

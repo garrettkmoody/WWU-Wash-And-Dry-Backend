@@ -14,6 +14,8 @@ Gets a list of all machine and details about them
 
 > **RESPONSE**
 
+- Information about machine
+
 > ## **Delete** /user
 
 Deletes a user
