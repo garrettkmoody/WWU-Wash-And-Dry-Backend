@@ -1,4 +1,4 @@
-#pylint: disable=E1101,W0702,C0301, W3101, W0621, C0114
+#pylint: disable=E1101,W0702,C0301, W3101, W0621, C0114, R0903, R0913
 import datetime
 import os
 from functools import wraps
@@ -268,6 +268,7 @@ def machine_by_id(requested_id):
             return jsonify(f"deleted information for machine with ID: {requested_id}")
         abort(404)
     abort(400)
+    return jsonify("There was an error.")
 
 
 @app.route(
@@ -403,7 +404,7 @@ def user_by_id(requested_user_publicid):
             )
         abort(404)
     abort(400)
-
+    return jsonify("There was an error")
 
 # not found error
 @app.errorhandler(404)
