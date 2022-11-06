@@ -1,100 +1,140 @@
+"""
+Test functions to ensure functionality of WWU-Wash-And-Dry-Backend's API endpoints.
+"""
+
+#pylint: disable = E1101, W0613
+
 import json
 import pytest
-
 from app import app, User, db, Machine, send_email
 
 # Test Parameters for User
-user_test_id = 1
-user_test_name = "Hayden"
-user_test_public_ID = "1"
-user_test_email = "Walla Walla"
+USER_TEST_ID = 1
+USER_TEST_NAME = "Hayden"
+USER_TEST_PUBLIC_ID = "1"
+USER_TEST_EMAIL = "Walla Walla"
 
 # Test Parameters for Machine
-machine_test_id = 1
-machine_test_floorId = 1
-machine_test_dorm = "Sittner"
-machine_test_floor = 0
-machine_test_isAvailable = True
-machine_test_lastServiceDate = "10/27/2022"
-machine_test_installationDate = "10/27/2022"
+MACHINE_TEST_ID = 1
+MACHINE_TEST_FLOOR_ID = 1
+MACHINE_TEST_DORM = "Sittner"
+MACHINE_TEST_FLOOR = 0
+MACHINE_TEST_IS_AVAILABLE = True
+MACHINE_TEST_LAST_SERVICE_DATE = "10/27/2022"
+MACHINE_TEST_INSTALLATION_DATE = "10/27/2022"
 
 # Test Parameters for Emails
-recipients = ["WWU-Wash-And-Dry@outlook.com"]
-body = "Testing email"
-subject = "Testing"
+RECIPIENTS = ["WWU-Wash-And-Dry@outlook.com"]
+BODY = "Testing email"
+SUBJECT = "Testing"
 
 
 # This pytest fixture allows us to update database within our test file.
-@pytest.fixture()
-def app_context():
+@pytest.fixture(name="app_context")
+def fixture_app_context():
+    """
+    This method allows us to edit app content.
+
+    Input Arguments: None
+    Return: Void
+    """
     with app.app_context():
         yield
 
-
 def test_send_email(app_context):
-    response = send_email(True, subject, body, recipients)
+    """
+    This method tests a successful send_email function call
+    Input Arguments: app_context
+    Returns: Void
+    """
+    response = send_email(True, SUBJECT, BODY, RECIPIENTS)
     assert response.status_code == 200
     assert json.loads(response.data) == "Email was successfully sent"
 
 
 def test_email_failure(app_context):
-    response = send_email(True, subject, body, [])
+    """
+    This method tests a failed send_email function call
+    Input Arguments: app_context
+    Returns: Void
+    """
+    response = send_email(True, SUBJECT, BODY, [])
     assert response.status_code == 400
 
 
 def test_unprotected_route():
+    """
+    This method tests a unprotected route and that a response is return succesfully
+    Input Arguments: None
+    Returns: Void
+    """
     response = app.test_client().get("/unprotected")
     assert response.status_code == 200
     assert json.loads(response.data) == "No Token No problem!"
 
 
-def test_getUser(app_context):
+def test_get_user(app_context):
+    """
+    This method tests a succesful /getUser/{USER_TEST_PUBLIC_ID} API call
+    Input Arguments: None
+    Returns: Void
+    """
     # create test user
-    newUser = User(user_test_id, user_test_public_ID, user_test_name, user_test_email)
-    db.session.add(newUser)
+    new_user = User(USER_TEST_ID, USER_TEST_PUBLIC_ID, USER_TEST_NAME, USER_TEST_EMAIL)
+    db.session.add(new_user)
     db.session.commit()
     # send request
-    response = app.test_client().get(f"/user/{user_test_public_ID}")
+    response = app.test_client().get(f"/user/{USER_TEST_PUBLIC_ID}")
     # remove created user
-    User.query.filter_by(public_id=user_test_public_ID).delete()
+    User.query.filter_by(public_id=USER_TEST_PUBLIC_ID).delete()
     db.session.commit()
     # test response
     assert response.status_code == 200
     assert json.loads(response.data) == (
         {
-            "Name": user_test_name,
-            "Public_ID": user_test_public_ID,
-            "Email": user_test_email,
+            "Name": USER_TEST_NAME,
+            "Public_ID": USER_TEST_PUBLIC_ID,
+            "Email": USER_TEST_EMAIL,
         }
     )
 
 
-def test_deleteUser(app_context):
-    newUser = User(user_test_id, user_test_public_ID, user_test_name, user_test_email)
-    db.session.add(newUser)
+def test_delete_user(app_context):
+    """
+    This method tests a succesful /deleteUser/{USER_TEST_PUBLIC_ID} API call
+    Input Arguments: app_context
+    Returns: Void
+    """
+    new_user = User(USER_TEST_ID, USER_TEST_PUBLIC_ID, USER_TEST_NAME, USER_TEST_EMAIL)
+    db.session.add(new_user)
     db.session.commit()
-    response = app.test_client().delete(f"/user/{user_test_public_ID}")
+    response = app.test_client().delete(f"/user/{USER_TEST_PUBLIC_ID}")
     assert response.status_code == 200
     assert (
         json.loads(response.data)
-        == f"deleted information for user with ID: {user_test_public_ID}"
+        == f"deleted information for user with ID: {USER_TEST_PUBLIC_ID}"
     )
 
 
-def test_getMachineById(app_context):
-    newMachine = Machine(
-        machine_test_id,
-        machine_test_floorId,
-        machine_test_dorm,
-        machine_test_floor,
-        machine_test_isAvailable,
-        machine_test_lastServiceDate,
-        machine_test_installationDate,
+def test_get_machine_by_id(app_context):
+    """
+    This method tests a successful /getMachine/{MACHINE_TEST_ID} API call
+    Input Arguments: app_context
+    Returns: Void
+    """
+    new_machine = Machine(
+        MACHINE_TEST_ID,
+        MACHINE_TEST_FLOOR_ID,
+        MACHINE_TEST_DORM,
+        MACHINE_TEST_FLOOR,
+        MACHINE_TEST_IS_AVAILABLE,
+        MACHINE_TEST_LAST_SERVICE_DATE,
+        MACHINE_TEST_INSTALLATION_DATE,
     )
-    db.session.add(newMachine)
+    db.session.add(new_machine)
     db.session.commit()
-    response = app.test_client().get(f"/machine/{machine_test_id}")
-    Machine.query.filter_by(id=machine_test_id).delete()
+    response = app.test_client().get(f"/machine/{MACHINE_TEST_ID}")
+    Machine.query.filter_by(id=MACHINE_TEST_ID).delete()
     db.session.commit()
     assert response.status_code == 200
     assert json.loads(response.data) == (
@@ -110,105 +150,126 @@ def test_getMachineById(app_context):
     )
 
 
-def test_deleteMachineById(app_context):
-    newMachine = Machine(
-        machine_test_id,
-        machine_test_floorId,
-        machine_test_dorm,
-        machine_test_floor,
-        machine_test_isAvailable,
-        machine_test_lastServiceDate,
-        machine_test_installationDate,
+def test_delete_machine_by_id(app_context):
+    """
+    This method tests a succesful /deleteMachine/{MACHINE_TEST_ID} API call
+    Input Arguments: app_context
+    Returns: Void
+    """
+    new_machine = Machine(
+        MACHINE_TEST_ID,
+        MACHINE_TEST_FLOOR_ID,
+        MACHINE_TEST_DORM,
+        MACHINE_TEST_FLOOR,
+        MACHINE_TEST_IS_AVAILABLE,
+        MACHINE_TEST_LAST_SERVICE_DATE,
+        MACHINE_TEST_INSTALLATION_DATE,
     )
-    db.session.add(newMachine)
+    db.session.add(new_machine)
     db.session.commit()
-    response = app.test_client().delete(f"/machine/{machine_test_id}")
-    Machine.query.filter_by(id=machine_test_id).delete()
+    response = app.test_client().delete(f"/machine/{MACHINE_TEST_ID}")
+    Machine.query.filter_by(id=MACHINE_TEST_ID).delete()
     assert response.status_code == 200
     assert (
         json.loads(response.data)
-        == f"deleted information for machine with ID: {machine_test_id}"
+        == f"deleted information for machine with ID: {MACHINE_TEST_ID}"
     )
 
 
-def test_createMachineById(app_context):
+def test_create_machine_by_id(app_context):
+    """
+    This method tests a successful /createMachine/{MACHINE_TEST_ID} API call
+    Input Arguments: app_context
+    Returns: Void
+    """
     response = app.test_client().post(
-        f"/machine/{machine_test_id}",
+        f"/machine/{MACHINE_TEST_ID}",
         query_string={
-            "floor_id": machine_test_floorId,
-            "dorm": machine_test_dorm,
-            "floor": machine_test_floor,
-            "is_available": machine_test_isAvailable,
-            "last_service_date": machine_test_lastServiceDate,
-            "installation_date": machine_test_installationDate,
+            "floor_id": MACHINE_TEST_FLOOR_ID,
+            "dorm": MACHINE_TEST_DORM,
+            "floor": MACHINE_TEST_FLOOR,
+            "is_available": MACHINE_TEST_IS_AVAILABLE,
+            "last_service_date": MACHINE_TEST_LAST_SERVICE_DATE,
+            "installation_date": MACHINE_TEST_INSTALLATION_DATE,
         },
     )
-    Machine.query.filter_by(id=machine_test_id).delete()
+    Machine.query.filter_by(id=MACHINE_TEST_ID).delete()
     db.session.commit()
     assert response.status_code == 200
     assert (
         json.loads(response.data)
-        == f"created information for machine with ID: {machine_test_id}"
+        == f"created information for machine with ID: {MACHINE_TEST_ID}"
     )
 
 
-def test_getMachineByDormFloorFloorID(app_context):
-    newMachine = Machine(
-        machine_test_id,
-        machine_test_floorId,
-        machine_test_dorm,
-        machine_test_floor,
-        machine_test_isAvailable,
-        machine_test_lastServiceDate,
-        machine_test_installationDate,
+def test_get_machine_by_dorm_floor_floor_id(app_context):
+    """
+    This method tests a successful
+    /machine/{MACHINE_TEST_DORM}/{MACHINE_TEST_FLOOR}/{MACHINE_TEST_FLOOR_ID} API call
+    Input Arguments: app_context
+    Returns: Void
+    """
+    new_machine = Machine(
+        MACHINE_TEST_ID,
+        MACHINE_TEST_FLOOR_ID,
+        MACHINE_TEST_DORM,
+        MACHINE_TEST_FLOOR,
+        MACHINE_TEST_IS_AVAILABLE,
+        MACHINE_TEST_LAST_SERVICE_DATE,
+        MACHINE_TEST_INSTALLATION_DATE,
     )
-    db.session.add(newMachine)
+    db.session.add(new_machine)
     db.session.commit()
     response = app.test_client().get(
-        f"/machine/{machine_test_dorm}/{machine_test_floor}/{machine_test_floorId}"
+        f"/machine/{MACHINE_TEST_DORM}/{MACHINE_TEST_FLOOR}/{MACHINE_TEST_FLOOR_ID}"
     )
-    Machine.query.filter_by(id=machine_test_id).delete()
+    Machine.query.filter_by(id=MACHINE_TEST_ID).delete()
     db.session.commit()
     assert response.status_code == 200
     assert json.loads(response.data) == [1, True]
 
 
-def test_getMachinesByDormFloor(app_context):
+def test_get_machines_by_dorm_floor(app_context):
+    """
+    This method tests a succesful /machine/{MACHINE_TEST_DORM}/{MACHINE_TEST_FLOOR} API call
+    Input Arguments: app_context
+    Return: Void
+    """
     test_id = [1, 2, 3]
-    test_floorId = [1, 2, 3]
-    newMachine0 = Machine(
+    test_floor_id = [1, 2, 3]
+    new_machine0 = Machine(
         test_id[0],
-        test_floorId[0],
-        machine_test_dorm,
-        machine_test_floor,
-        machine_test_isAvailable,
-        machine_test_lastServiceDate,
-        machine_test_installationDate,
+        test_floor_id[0],
+        MACHINE_TEST_DORM,
+        MACHINE_TEST_FLOOR,
+        MACHINE_TEST_IS_AVAILABLE,
+        MACHINE_TEST_LAST_SERVICE_DATE,
+        MACHINE_TEST_INSTALLATION_DATE,
     )
-    newMachine1 = Machine(
+    new_machine1 = Machine(
         test_id[1],
-        test_floorId[1],
-        machine_test_dorm,
-        machine_test_floor,
-        machine_test_isAvailable,
-        machine_test_lastServiceDate,
-        machine_test_installationDate,
+        test_floor_id[1],
+        MACHINE_TEST_DORM,
+        MACHINE_TEST_FLOOR,
+        MACHINE_TEST_IS_AVAILABLE,
+        MACHINE_TEST_LAST_SERVICE_DATE,
+        MACHINE_TEST_INSTALLATION_DATE,
     )
-    newMachine2 = Machine(
+    new_machine2 = Machine(
         test_id[2],
-        test_floorId[2],
-        machine_test_dorm,
-        machine_test_floor,
-        machine_test_isAvailable,
-        machine_test_lastServiceDate,
-        machine_test_installationDate,
+        test_floor_id[2],
+        MACHINE_TEST_DORM,
+        MACHINE_TEST_FLOOR,
+        MACHINE_TEST_IS_AVAILABLE,
+        MACHINE_TEST_LAST_SERVICE_DATE,
+        MACHINE_TEST_INSTALLATION_DATE,
     )
-    db.session.add(newMachine0)
-    db.session.add(newMachine1)
-    db.session.add(newMachine2)
+    db.session.add(new_machine0)
+    db.session.add(new_machine1)
+    db.session.add(new_machine2)
     db.session.commit()
     response = app.test_client().get(
-        f"/machine/{machine_test_dorm}/{machine_test_floor}"
+        f"/machine/{MACHINE_TEST_DORM}/{MACHINE_TEST_FLOOR}"
     )
     Machine.query.filter_by(id=test_id[0]).delete()
     Machine.query.filter_by(id=test_id[1]).delete()
@@ -218,42 +279,47 @@ def test_getMachinesByDormFloor(app_context):
     assert json.loads(response.data) == [[1, 1, True], [2, 2, True], [3, 3, True]]
 
 
-def test_getMachinesByDorm(app_context):
+def test_get_machines_by_dorm(app_context):
+    """
+    This method tests a successful /machine/{MACHINE_TEST_DORM} API call
+    Input Arguments: app_context
+    Returns: Void
+    """
     test_id = [1, 2, 3]
-    test_floorId = [1, 2, 3]
+    test_floor_id = [1, 2, 3]
     test_floor = [1, 2, 3]
-    newMachine0 = Machine(
+    new_machine0 = Machine(
         test_id[0],
-        test_floorId[0],
-        machine_test_dorm,
+        test_floor_id[0],
+        MACHINE_TEST_DORM,
         test_floor[0],
-        machine_test_isAvailable,
-        machine_test_lastServiceDate,
-        machine_test_installationDate,
+        MACHINE_TEST_IS_AVAILABLE,
+        MACHINE_TEST_LAST_SERVICE_DATE,
+        MACHINE_TEST_INSTALLATION_DATE,
     )
-    newMachine1 = Machine(
+    new_machine1 = Machine(
         test_id[1],
-        test_floorId[1],
-        machine_test_dorm,
+        test_floor_id[1],
+        MACHINE_TEST_DORM,
         test_floor[1],
-        machine_test_isAvailable,
-        machine_test_lastServiceDate,
-        machine_test_installationDate,
+        MACHINE_TEST_IS_AVAILABLE,
+        MACHINE_TEST_LAST_SERVICE_DATE,
+        MACHINE_TEST_INSTALLATION_DATE,
     )
-    newMachine2 = Machine(
+    new_machine2 = Machine(
         test_id[2],
-        test_floorId[2],
-        machine_test_dorm,
+        test_floor_id[2],
+        MACHINE_TEST_DORM,
         test_floor[2],
-        machine_test_isAvailable,
-        machine_test_lastServiceDate,
-        machine_test_installationDate,
+        MACHINE_TEST_IS_AVAILABLE,
+        MACHINE_TEST_LAST_SERVICE_DATE,
+        MACHINE_TEST_INSTALLATION_DATE,
     )
-    db.session.add(newMachine0)
-    db.session.add(newMachine1)
-    db.session.add(newMachine2)
+    db.session.add(new_machine0)
+    db.session.add(new_machine1)
+    db.session.add(new_machine2)
     db.session.commit()
-    response = app.test_client().get(f"/machine/{machine_test_dorm}")
+    response = app.test_client().get(f"/machine/{MACHINE_TEST_DORM}")
     Machine.query.filter_by(id=test_id[0]).delete()
     Machine.query.filter_by(id=test_id[1]).delete()
     Machine.query.filter_by(id=test_id[2]).delete()
