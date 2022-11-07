@@ -71,15 +71,16 @@ def send_email(testing, msg_subject, msg_body, msg_recipients):
 class User(db.Model):
     """
     User class
-    Init: user_id, public_id, name, and email
+    Init: id, public_id, name, and email
     """
-    user_id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     public_id = db.Column(db.String(50), unique=True)
     name = db.Column(db.String(100))
     email = db.Column(db.String(70), unique=True)
 
-    def __init__(self, user_id, public_id, name, email):
-        self.user_id = user_id
+    #pylint: disable=C0103, W0622
+    def __init__(self, id, public_id, name, email):
+        self.id = id
         self.public_id = public_id
         self.name = name
         self.email = email
@@ -88,7 +89,7 @@ class User(db.Model):
 class Machine(db.Model):
     """
     Machine Class
-    Init: machine_id, floor_id, dorm, is_available, last_service_date, installation_date
+    Init: id, floor_id, dorm, is_available, last_service_date, installation_date
     """
     __bind_key__ = "machine"
     id = db.Column(db.Integer, primary_key=True)
@@ -98,10 +99,10 @@ class Machine(db.Model):
     is_available = db.Column(db.Boolean)
     last_service_date = db.Column(db.String)
     installation_date = db.Column(db.String)
-
+    #pylint: disable=C0103,W0622
     def __init__(
         self,
-        machine_id,
+        id,
         floor_id,
         dorm,
         floor,
@@ -109,7 +110,7 @@ class Machine(db.Model):
         last_sevice_date,
         installation_date,
     ):
-        self.machine_id = machine_id
+        self.id = id
         self.floor_id = floor_id
         self.dorm = dorm
         self.floor = floor
@@ -252,7 +253,7 @@ def machine_by_id(requested_id):
         machine_info = Machine.query.filter_by(id=requested_id).first_or_404()
         return jsonify(
             {
-                "ID": machine_info.machine_id,
+                "ID": machine_info.id,
                 "Floor_ID": machine_info.floor_id,
                 "Floor": machine_info.floor,
                 "Dorm": machine_info.dorm,
@@ -284,7 +285,7 @@ def machine_by_dorm_floor_floorid(requested_dorm, requested_floor, requested_flo
     machine_info = Machine.query.filter_by(
         floor_id=requested_floor_id, floor=requested_floor, dorm=requested_dorm
     ).first_or_404()
-    return jsonify([machine_info.machine_id, machine_info.is_available])
+    return jsonify([machine_info.id, machine_info.is_available])
 
 
 @app.route("/machine/<string:requested_dorm>/<int:requested_floor>", methods=["GET"])
@@ -302,7 +303,7 @@ def machines_by_dorm_and_floor(requested_dorm, requested_floor):
     request_objects = []
     while machine_info_length != 0:
         request_return_object = []
-        request_return_object.append(machine_info[counter].machine_id)
+        request_return_object.append(machine_info[counter].id)
         request_return_object.append(machine_info[counter].floor_id)
         request_return_object.append(machine_info[counter].is_available)
         request_objects.append(request_return_object)
@@ -324,7 +325,7 @@ def machines_by_dorm(requested_dorm):
     request_objects = []
     while machine_info_length != 0:
         request_return_object = []
-        request_return_object.append(machine_info[counter].machine_id)
+        request_return_object.append(machine_info[counter].id)
         request_return_object.append(machine_info[counter].floor)
         request_return_object.append(machine_info[counter].floor_id)
         request_return_object.append(machine_info[counter].is_available)
