@@ -1,9 +1,9 @@
+#pylint: disable=E1101,W0702,C0301, W3101, W0621, C0114, R0903, R0913
 import datetime
 import os
 from functools import wraps
 import jwt
 import requests
-
 from dotenv import load_dotenv
 from flask import Flask, redirect, request, jsonify, flash, abort, make_response
 from flask_mail import Mail, Message
@@ -69,11 +69,16 @@ def send_email(testing, msg_subject, msg_body, msg_recipients):
 
 
 class User(db.Model):
+    """
+    User class
+    Init: id, public_id, name, and email
+    """
     id = db.Column(db.Integer, primary_key=True)
     public_id = db.Column(db.String(50), unique=True)
     name = db.Column(db.String(100))
     email = db.Column(db.String(70), unique=True)
 
+    #pylint: disable=C0103, W0622
     def __init__(self, id, public_id, name, email):
         self.id = id
         self.public_id = public_id
@@ -82,6 +87,10 @@ class User(db.Model):
 
 
 class Machine(db.Model):
+    """
+    Machine Class
+    Init: id, floor_id, dorm, is_available, last_service_date, installation_date
+    """
     __bind_key__ = "machine"
     id = db.Column(db.Integer, primary_key=True)
     floor_id = db.Column(db.Integer)
@@ -90,7 +99,7 @@ class Machine(db.Model):
     is_available = db.Column(db.Boolean)
     last_service_date = db.Column(db.String)
     installation_date = db.Column(db.String)
-
+    #pylint: disable=C0103,W0622
     def __init__(
         self,
         id,
@@ -114,9 +123,11 @@ with app.app_context():
     db.create_all()
 
 
-# Token Function Decorator
-def token_required(f):
-    @wraps(f)
+def token_required(function_decorator):
+    """
+    Token Function Decorator
+    """
+    @wraps(function_decorator)
     def decorator(*args, **kwargs):
         token = None
         if "access_token" in request.headers:
@@ -130,7 +141,7 @@ def token_required(f):
         except:
             return jsonify({"message": "Invalid Authentication Token!"}), 401
 
-        return f(current_user, *args, **kwargs)
+        return function_decorator(current_user, *args, **kwargs)
 
     return decorator
 
@@ -138,6 +149,10 @@ def token_required(f):
 # Callback URI for Azure AD
 @app.route("/login/callback")
 def callback():
+    """
+    callback for single sign on
+    Returns: A redirect with an auth token or a redirect for auth failed
+    """
     if request.args.get("error"):
         return request.args.get("error"), 403
     if not request.args.get("code"):
@@ -150,32 +165,33 @@ def callback():
         "code": request.args.get("code"),
         "client_secret": app.config["AZURE_OAUTH_CLIENT_SECRET"],
     }
-
-    r = requests.post(
+    request_data = requests.post(
         url="https://login.microsoftonline.com/d958f048-e431-4277-9c8d-ebfb75e7aa64/oauth2/v2.0/token",
         data=body,
     )
-    data = r.json()
+    data = request_data.json()
 
     try:
-        authHeaders = {"Authorization": "Bearer " + data["access_token"]}
-        userResponse = requests.get(
-            url="https://graph.microsoft.com/v1.0/me", headers=authHeaders
+        auth_headers = {"Authorization": "Bearer " + data["access_token"]}
+        user_response = requests.get(
+            url="https://graph.microsoft.com/v1.0/me", headers=auth_headers
         )
-        userData = userResponse.json()
-        if not User.query.filter_by(public_id=userData["id"]).first():
-            newUser = User(
-                public_id=userData["id"],
-                name=userData["displayName"],
-                email=userData["mail"],
+        user_data = user_response.json()
+        if not User.query.filter_by(public_id=user_data["id"]).first():
+            #pylint: disable=E1120
+            #Need to work this out
+            new_user = User(
+                public_id=user_data["id"],
+                name=user_data["displayName"],
+                email=user_data["mail"],
             )
-            db.session.add(newUser)
+            db.session.add(new_user)
             db.session.commit()
             print("New User Created!")
 
         token = jwt.encode(
             {
-                "public_id": userData["id"],
+                "public_id": user_data["id"],
                 "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=45),
             },
             app.config["SECRET_KEY"],
@@ -188,6 +204,13 @@ def callback():
 
 @app.route("/machine/<int:requested_id>", methods=["GET", "DELETE", "POST"])
 def machine_by_id(requested_id):
+    """
+    Endpoint for getting/posting/deleting a machine by its ID
+    Parameter: ID for the machine
+    Returns: Post: A confirmation message if it works
+             Deletes: A confirmation message that the machine has been deleted
+             Get: The machine's information
+    """
     if request.method == "POST":
         # Accepting Parameter Arguments
         floor_id = request.args.get("floor_id")
@@ -211,7 +234,7 @@ def machine_by_id(requested_id):
         # Parameter Arguments are valid, attempt to create user
         if error is None:
             try:
-                newMachine = Machine(
+                new_machine = Machine(
                     requested_id,
                     int(floor_id),
                     dorm,
@@ -220,13 +243,13 @@ def machine_by_id(requested_id):
                     last_service_date,
                     installation_date,
                 )
-                db.session.add(newMachine)
+                db.session.add(new_machine)
                 db.session.commit()
             except db.IntegrityError:
                 error = f"Machine {requested_id} is already registered."
         flash(error)
         return jsonify(f"created information for machine with ID: {requested_id}")
-    elif request.method == "GET":
+    if request.method == "GET":
         machine_info = Machine.query.filter_by(id=requested_id).first_or_404()
         return jsonify(
             {
@@ -239,13 +262,14 @@ def machine_by_id(requested_id):
                 "Installation_Date": machine_info.installation_date,
             }
         )
-    elif request.method == "DELETE":
+    if request.method == "DELETE":
         delete_request = Machine.query.filter_by(id=requested_id).delete()
         db.session.commit()
         if delete_request:
             return jsonify(f"deleted information for machine with ID: {requested_id}")
-        else:
-            abort(404)
+        abort(404)
+    abort(400)
+    return jsonify("There was an error.")
 
 
 @app.route(
@@ -253,6 +277,11 @@ def machine_by_id(requested_id):
     methods=["GET"],
 )
 def machine_by_dorm_floor_floorid(requested_dorm, requested_floor, requested_floor_id):
+    """
+    Endpoint for getting machine by dorm, floor, and floorid
+    Paramters: Dorm, Floor number, and the floor id
+    Returns: A json object with information about the specific machine
+    """
     machine_info = Machine.query.filter_by(
         floor_id=requested_floor_id, floor=requested_floor, dorm=requested_dorm
     ).first_or_404()
@@ -261,37 +290,47 @@ def machine_by_dorm_floor_floorid(requested_dorm, requested_floor, requested_flo
 
 @app.route("/machine/<string:requested_dorm>/<int:requested_floor>", methods=["GET"])
 def machines_by_dorm_and_floor(requested_dorm, requested_floor):
+    """
+    Endpoint for getting machines by dorm and floor
+    Parameter: Dorm and Floor number
+    Returns: A json object that has a list of machines objects for that floor and dorm
+    """
     machine_info = Machine.query.filter_by(
         floor=requested_floor, dorm=requested_dorm
     ).all()
-    x = len(machine_info)
+    machine_info_length = len(machine_info)
     counter = 0
     request_objects = []
-    while x != 0:
+    while machine_info_length != 0:
         request_return_object = []
         request_return_object.append(machine_info[counter].id)
         request_return_object.append(machine_info[counter].floor_id)
         request_return_object.append(machine_info[counter].is_available)
         request_objects.append(request_return_object)
-        x -= 1
+        machine_info_length -= 1
         counter += 1
     return jsonify(request_objects)
 
 
 @app.route("/machine/<string:requested_dorm>", methods=["GET"])
 def machines_by_dorm(requested_dorm):
+    """
+    Endpoint for getting machines by dorm
+    Parameters: The requested dorm
+    Returns: A json object with a list of machines nd their information
+    """
     machine_info = Machine.query.filter_by(dorm=requested_dorm).all()
-    x = len(machine_info)
+    machine_info_length = len(machine_info)
     counter = 0
     request_objects = []
-    while x != 0:
+    while machine_info_length != 0:
         request_return_object = []
         request_return_object.append(machine_info[counter].id)
         request_return_object.append(machine_info[counter].floor)
         request_return_object.append(machine_info[counter].floor_id)
         request_return_object.append(machine_info[counter].is_available)
         request_objects.append(request_return_object)
-        x -= 1
+        machine_info_length -= 1
         counter += 1
     return jsonify(request_objects)
 
@@ -299,6 +338,12 @@ def machines_by_dorm(requested_dorm):
 @app.route("/test_email")
 # Remove this endpoint in the future when we implement a way for machines to send emails
 def test_email():
+    """
+    This is an endpoint to test the functionality of the send email function
+    Will remove in the future when we implement the notifying users
+    Parameters: none
+    Returns: A json response from the send email function
+    """
     return send_email(
         False, "Test_email endpoint", "Endpoint works", ["WWU-Wash-And-Dry@outlook.com"]
     )
@@ -307,6 +352,10 @@ def test_email():
 # Unprotected route, no token required
 @app.route("/unprotected")
 def unprotected():
+    """
+    Unprotected endpoint
+    Returns: A confirmation message
+    """
     return jsonify("No Token No problem!")
 
 
@@ -314,16 +363,28 @@ def unprotected():
 @app.route("/protected")
 @token_required
 def protected(current_user):
+    """
+    Protected endpoint
+    Parameters: Current user
+    Returns: A json message that greets the current user
+    """
     return jsonify("Hello " + current_user.name)
 
 
-@app.route("/user/<requested_Public_UserID>", methods=["GET", "DELETE"])
-def user_by_id(requested_Public_UserID):
+@app.route("/user/<requested_user_publicid>", methods=["GET", "DELETE"])
+def user_by_id(requested_user_publicid):
+    """
+    Endpoint for getting and deleting user by their public ID
+    Parameters: Takes in a user public ID
+    Returns: For Get request returns information on user
+             For Delete request returns a confirmation message
+             Will also return errors if anything goes wrong
+    """
     if request.method == "GET":
         # Filter can be changed later to be more secure
         # First_or_404 will abort if not found and send a 404
         user_info = User.query.filter_by(
-            public_id=requested_Public_UserID
+            public_id=requested_user_publicid
         ).first_or_404()
         return jsonify(
             {
@@ -332,36 +393,51 @@ def user_by_id(requested_Public_UserID):
                 "Email": user_info.email,
             }
         )
-    elif request.method == "DELETE":
+    if request.method == "DELETE":
         # Filter can be changed later to be more secure
-        delete_Request = User.query.filter_by(
-            public_id=requested_Public_UserID
+        delete_request = User.query.filter_by(
+            public_id=requested_user_publicid
         ).delete()
         db.session.commit()
-        if delete_Request:
+        if delete_request:
             return jsonify(
-                f"deleted information for user with ID: {requested_Public_UserID}"
+                f"deleted information for user with ID: {requested_user_publicid}"
             )
-        else:
-            abort(404)
-
+        abort(404)
+    abort(400)
+    return jsonify("There was an error")
 
 # not found error
 @app.errorhandler(404)
-def catch_not_found(e):
-    return jsonify("Error 404 not found")
+def catch_not_found(error):
+    """
+    Error handler for status code 404 which is not found error
+
+    Returns: A json message saying what the error is and the error code
+    """
+    return jsonify(error=str(error)), 404
 
 
 # bad request error
 @app.errorhandler(400)
-def catch_bad_requests(e):
-    return jsonify("Error 400, bad request")
+def catch_bad_requests(error):
+    """
+    Error handler for status code 404 which is a bad request
+    Parameters: Takes in an error
+    Returns: A json message saying what the error is and the error code
+    """
+    return jsonify(error=str(error)), 400
 
 
 # internal server error
 @app.errorhandler(500)
-def catch_server_errors(e):
-    return jsonify("Error 500, something went wrong with server")
+def catch_server_errors(error):
+    """
+    Error handler for status code 500 which is a server error
+
+    Returns: A json message saying what the error is and the error code
+    """
+    return jsonify(error=str(error)), 500
 
 
 # main driver function
