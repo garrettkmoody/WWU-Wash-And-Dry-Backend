@@ -80,7 +80,7 @@ def test_get_user(app_context):
     Returns: Void
     """
     # create test user
-    new_user = User(USER_TEST_ID, USER_TEST_PUBLIC_ID, USER_TEST_NAME, USER_TEST_EMAIL)
+    new_user = User(USER_TEST_PUBLIC_ID, USER_TEST_NAME, USER_TEST_EMAIL)
     db.session.add(new_user)
     db.session.commit()
     # send request
@@ -105,7 +105,7 @@ def test_delete_user(app_context):
     Input Arguments: app_context
     Returns: Void
     """
-    new_user = User(USER_TEST_ID, USER_TEST_PUBLIC_ID, USER_TEST_NAME, USER_TEST_EMAIL)
+    new_user = User(USER_TEST_PUBLIC_ID, USER_TEST_NAME, USER_TEST_EMAIL)
     db.session.add(new_user)
     db.session.commit()
     response = app.test_client().delete(f"/user/{USER_TEST_PUBLIC_ID}")
