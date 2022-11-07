@@ -173,35 +173,35 @@ def callback():
         data=body,
     )
     data = request_data.json()
-    # try:
-    auth_headers = {"Authorization": "Bearer " + data["access_token"]}
-    user_response = requests.get(
-        url="https://graph.microsoft.com/v1.0/me", headers=auth_headers
-    )
-    user_data = user_response.json()
-    if not User.query.filter_by(public_id=user_data["id"]).first():
-        #pylint: disable=E1120
-        # Need to work this out
-        new_user = User(
-            user_data["id"],
-            user_data["displayName"],
-            user_data["mail"],
+    try:
+        auth_headers = {"Authorization": "Bearer " + data["access_token"]}
+        user_response = requests.get(
+            url="https://graph.microsoft.com/v1.0/me", headers=auth_headers
         )
-        db.session.add(new_user)
-        db.session.commit()
-        print("New User Created!")
+        user_data = user_response.json()
+        if not User.query.filter_by(public_id=user_data["id"]).first():
+            #pylint: disable=E1120
+            # Need to work this out
+            new_user = User(
+                user_data["id"],
+                user_data["displayName"],
+                user_data["mail"],
+            )
+            db.session.add(new_user)
+            db.session.commit()
+            print("New User Created!")
 
-    token = jwt.encode(
-        {
-            "public_id": user_data["id"],
-            "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=45),
-        },
-        app.config["SECRET_KEY"],
-        "HS256",
-    )
-    return redirect("http://www.google.com?token=" + token)
-    # except:
-    #     return redirect("http://www.google.com?error=AuthFailed")
+        token = jwt.encode(
+            {
+                "public_id": user_data["id"],
+                "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=45),
+            },
+            app.config["SECRET_KEY"],
+            "HS256",
+        )
+        return redirect("http://www.google.com?token=" + token)
+    except:
+        return redirect("http://www.google.com?error=AuthFailed")
 
 
 @app.route("/machine/<int:requested_id>", methods=["GET", "DELETE", "POST"])
