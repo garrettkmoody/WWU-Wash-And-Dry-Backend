@@ -1,12 +1,12 @@
-#pylint: disable=E1101,W0702,C0301, W3101, W0621, C0114, R0903, R0913
+#pylint: disable=E1101,W0702,C0301, W3101, W0621, C0114, R0903, R0913, R0902
 import datetime
 import os
 from functools import wraps
+import time
 import jwt
 import requests
 from dotenv import load_dotenv
-from flask import Flask, redirect, request, jsonify, flash, abort, make_response
-from flask_mail import Mail, Message
+from flask import Flask, redirect, request, jsonify, flash, abort
 from flask_sqlalchemy import SQLAlchemy
 
 load_dotenv()
@@ -34,39 +34,7 @@ mail_settings = {
     "MAIL_PASSWORD": MAIL_PASSWORD,
 }
 app.config.update(mail_settings)
-mail = Mail(app)
 db = SQLAlchemy(app)
-
-
-def send_email(testing, msg_subject, msg_body, msg_recipients):
-    """
-    Sends an email from WWU-Wash-And-Dry@outlook.com
-    Args:
-        testing is a bool that will not send an email to recipients when true
-        msg_subject is a string will be the subject of the email
-        msg_body is a string that will be the body of the email
-        msg_recipients is a list of strings of email addresses that will receive the email
-    Returns a confirmation message with a 200 status code if the email was successful
-    and if there was an error it will return an error message with 400 status code
-    """
-    try:
-        if testing:
-            app.config.update({"MAIL_SUPPRESS_SEND": True})
-            mail = Mail(app)
-        else:
-            app.config.update({"MAIL_SUPPRESS_SEND": False})
-            mail = Mail(app)
-        email = Message(
-            subject=msg_subject,
-            body=msg_body,
-            sender="WWU-Wash-And-Dry@outlook.com",
-            recipients=msg_recipients,
-        )
-        mail.send(email)
-        return jsonify("Email was successfully sent")
-    except:
-        return make_response("Could not send email.", 400)
-
 
 class User(db.Model):
     """
@@ -89,34 +57,39 @@ class User(db.Model):
 class Machine(db.Model):
     """
     Machine Class
-    Init: id, floor_id, dorm, is_available, last_service_date, installation_date
+    Init: id, floor_id, dorm, status, last_service_date, installation_date
     """
     __bind_key__ = "machine"
     id = db.Column(db.Integer, primary_key=True)
+    public_id = db.Column(db.Integer, unique=True)
     floor_id = db.Column(db.Integer)
     dorm = db.Column(db.String(10))
     floor = db.Column(db.Integer)
-    is_available = db.Column(db.Boolean)
+    status = db.Column(db.Boolean)
     last_service_date = db.Column(db.String)
     installation_date = db.Column(db.String)
+    finish_time = db.Column(db.Integer)
+    user_name = db.Column(db.String(100))
     #pylint: disable=C0103,W0622
     def __init__(
         self,
-        id,
+        public_id,
         floor_id,
         dorm,
         floor,
-        is_available,
+        status,
         last_sevice_date,
         installation_date,
+        finish_time
     ):
-        self.id = id
+        self.public_id = public_id
         self.floor_id = floor_id
         self.dorm = dorm
         self.floor = floor
-        self.is_available = is_available
+        self.status = status
         self.last_service_date = last_sevice_date
         self.installation_date = installation_date
+        self.finish_time = finish_time
 
 
 with app.app_context():
@@ -201,7 +174,6 @@ def callback():
     except:
         return redirect("http://www.google.com?error=AuthFailed")
 
-
 @app.route("/machine/<int:requested_id>", methods=["GET", "DELETE", "POST"])
 def machine_by_id(requested_id):
     """
@@ -211,14 +183,19 @@ def machine_by_id(requested_id):
              Deletes: A confirmation message that the machine has been deleted
              Get: The machine's information
     """
+
+
+
+
     if request.method == "POST":
         # Accepting Parameter Arguments
         floor_id = request.args.get("floor_id")
         dorm = request.args.get("dorm")
         floor = request.args.get("floor", None)
-        is_available = request.args.get("is_available")
+        status = request.args.get("status")
         last_service_date = request.args.get("last_service_date")
         installation_date = request.args.get("installation_date")
+        finish_time = request.args.get("finish_time", None)
         error = None
         # Checking Parameter Arguments
         if not floor_id:
@@ -227,8 +204,8 @@ def machine_by_id(requested_id):
             error = "dorm is required"
         elif not floor:
             error = "floor is required"
-        elif not is_available:
-            error = "is_available is required"
+        elif not status:
+            error = "status is required"
         elif not installation_date:
             error = "installation_date is required"
         # Parameter Arguments are valid, attempt to create user
@@ -239,9 +216,10 @@ def machine_by_id(requested_id):
                     int(floor_id),
                     dorm,
                     int(floor),
-                    bool(is_available),
+                    bool(status),
                     last_service_date,
                     installation_date,
+                    finish_time
                 )
                 db.session.add(new_machine)
                 db.session.commit()
@@ -249,21 +227,24 @@ def machine_by_id(requested_id):
                 error = f"Machine {requested_id} is already registered."
         flash(error)
         return jsonify(f"created information for machine with ID: {requested_id}")
+
+
+
     if request.method == "GET":
-        machine_info = Machine.query.filter_by(id=requested_id).first_or_404()
+        machine_info = Machine.query.filter_by(public_id=requested_id).first_or_404()
         return jsonify(
             {
-                "ID": machine_info.id,
+                "Public_ID": machine_info.public_id,
                 "Floor_ID": machine_info.floor_id,
                 "Floor": machine_info.floor,
                 "Dorm": machine_info.dorm,
-                "Is_Available": machine_info.is_available,
+                "Status": machine_info.status,
                 "Last_Service_Date": machine_info.last_service_date,
                 "Installation_Date": machine_info.installation_date,
             }
         )
     if request.method == "DELETE":
-        delete_request = Machine.query.filter_by(id=requested_id).delete()
+        delete_request = Machine.query.filter_by(public_id=requested_id).delete()
         db.session.commit()
         if delete_request:
             return jsonify(f"deleted information for machine with ID: {requested_id}")
@@ -274,18 +255,35 @@ def machine_by_id(requested_id):
 
 @app.route(
     "/machine/<string:requested_dorm>/<int:requested_floor>/<int:requested_floor_id>",
-    methods=["GET"],
+    methods=["GET","PUT"],
 )
-def machine_by_dorm_floor_floorid(requested_dorm, requested_floor, requested_floor_id):
+def machine_by_dorm_floor_floor_id(requested_dorm, requested_floor, requested_floor_id):
     """
     Endpoint for getting machine by dorm, floor, and floorid
     Paramters: Dorm, Floor number, and the floor id
     Returns: A json object with information about the specific machine
     """
-    machine_info = Machine.query.filter_by(
-        floor_id=requested_floor_id, floor=requested_floor, dorm=requested_dorm
-    ).first_or_404()
-    return jsonify([machine_info.id, machine_info.is_available])
+    if request.method == "GET":
+        machine_info = Machine.query.filter_by(
+            floor_id=requested_floor_id, floor=requested_floor, dorm=requested_dorm
+        ).first_or_404()
+        return jsonify([machine_info.public_id, machine_info.status])
+    if request.method == "PUT":
+        status = request.args.get("status")
+        user_name = request.args.get("user_name")
+        machine_info = Machine.query.filter_by(
+            floor_id=requested_floor_id, floor=requested_floor, dorm=requested_dorm
+        ).first_or_404()
+        machine_info.status  = status
+        if status == "in_use":
+            #Sets end time 30 minutes from current time
+            machine_info.finish_time = int((time.time_ns() + 1.8 * 10 ** 12)/60000000000)
+            machine_info.user_name = user_name
+        else:
+            machine_info.finish_time = None
+        return jsonify([machine_info.public_id, machine_info.status, machine_info.user_name, machine_info.finish_time])
+    abort(400)
+    return jsonify("There was an error.")
 
 
 @app.route("/machine/<string:requested_dorm>/<int:requested_floor>", methods=["GET"])
@@ -303,9 +301,9 @@ def machines_by_dorm_and_floor(requested_dorm, requested_floor):
     request_objects = []
     while machine_info_length != 0:
         request_return_object = []
-        request_return_object.append(machine_info[counter].id)
+        request_return_object.append(machine_info[counter].public_id)
         request_return_object.append(machine_info[counter].floor_id)
-        request_return_object.append(machine_info[counter].is_available)
+        request_return_object.append(machine_info[counter].status)
         request_objects.append(request_return_object)
         machine_info_length -= 1
         counter += 1
@@ -325,29 +323,14 @@ def machines_by_dorm(requested_dorm):
     request_objects = []
     while machine_info_length != 0:
         request_return_object = []
-        request_return_object.append(machine_info[counter].id)
+        request_return_object.append(machine_info[counter].public_id)
         request_return_object.append(machine_info[counter].floor)
         request_return_object.append(machine_info[counter].floor_id)
-        request_return_object.append(machine_info[counter].is_available)
+        request_return_object.append(machine_info[counter].status)
         request_objects.append(request_return_object)
         machine_info_length -= 1
         counter += 1
     return jsonify(request_objects)
-
-
-@app.route("/test_email")
-# Remove this endpoint in the future when we implement a way for machines to send emails
-def test_email():
-    """
-    This is an endpoint to test the functionality of the send email function
-    Will remove in the future when we implement the notifying users
-    Parameters: none
-    Returns: A json response from the send email function
-    """
-    return send_email(
-        False, "Test_email endpoint", "Endpoint works", ["WWU-Wash-And-Dry@outlook.com"]
-    )
-
 
 # Unprotected route, no token required
 @app.route("/unprotected")
@@ -371,8 +354,8 @@ def protected(current_user):
     return jsonify("Hello " + current_user.name)
 
 
-@app.route("/user/<requested_user_publicid>", methods=["GET", "DELETE"])
-def user_by_id(requested_user_publicid):
+@app.route("/user/<requested_user_id>", methods=["GET", "DELETE"])
+def user_by_id(requested_user_id):
     """
     Endpoint for getting and deleting user by their public ID
     Parameters: Takes in a user public ID
@@ -384,7 +367,7 @@ def user_by_id(requested_user_publicid):
         # Filter can be changed later to be more secure
         # First_or_404 will abort if not found and send a 404
         user_info = User.query.filter_by(
-            public_id=requested_user_publicid
+            public_id=requested_user_id
         ).first_or_404()
         return jsonify(
             {
@@ -396,12 +379,12 @@ def user_by_id(requested_user_publicid):
     if request.method == "DELETE":
         # Filter can be changed later to be more secure
         delete_request = User.query.filter_by(
-            public_id=requested_user_publicid
+            public_id=requested_user_id
         ).delete()
         db.session.commit()
         if delete_request:
             return jsonify(
-                f"deleted information for user with ID: {requested_user_publicid}"
+                f"deleted information for user with ID: {requested_user_id}"
             )
         abort(404)
     abort(400)
