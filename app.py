@@ -172,8 +172,10 @@ def callback():
             app.config["SECRET_KEY"],
             "HS256",
         )
+        print("Authentication Successful!")
         return redirect("https://reece-reklai.github.io/DormitoryWasherAndDryer/?token=" + token)
     except:
+        print("Auth failed")
         return redirect("https://reece-reklai.github.io/DormitoryWasherAndDryer/?error=AuthFailed")
 
 @app.route("/machine/<int:requested_id>", methods=["GET", "DELETE", "POST"])
