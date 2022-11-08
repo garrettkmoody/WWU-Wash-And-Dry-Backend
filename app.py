@@ -199,9 +199,9 @@ def callback():
             app.config["SECRET_KEY"],
             "HS256",
         )
-        return redirect("http://www.google.com?token=" + token)
+        return redirect("https://reece-reklai.github.io/DormitoryWasherAndDryer/#/?token=" + token)
     except:
-        return redirect("http://www.google.com?error=AuthFailed")
+        return redirect("https://reece-reklai.github.io/DormitoryWasherAndDryer/#/?error=AuthFailed")
 
 
 @app.route("/machine/<int:requested_id>", methods=["GET", "DELETE", "POST"])
