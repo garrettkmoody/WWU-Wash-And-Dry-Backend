@@ -4,6 +4,7 @@ This file is to implement the email notification system
 
 #pylint: disable=W0621,W0702,E1101
 
+import threading
 import time
 from flask import jsonify, make_response
 from flask_mail import Mail, Message
@@ -12,6 +13,7 @@ from app import app, db, Machine, User
 mail = Mail(app)
 MSG_SUBJECT = "Laundry Done"
 MSG_BODY = "This needs to be implemented"
+TIMER = 60 #How often to check when to send notification in seconds
 
 def send_email(testing, msg_subject, msg_body, msg_recipients):
     """
@@ -51,7 +53,7 @@ def notification_timer():
     """
     while 1:
         send_notifications()
-        time.sleep(60)
+        time.sleep(TIMER)
 
 def send_notifications():
     """
@@ -71,3 +73,7 @@ def send_notifications():
         finished_machines[counter].user_name = None
         db.session.commit()
         counter+=1
+
+#Start Notification Thread
+notification_system = threading.Thread(target=notification_timer(), daemon=True)
+notification_system.start()
