@@ -1,7 +1,7 @@
 # WWU Wash and Dry Specific files
 .env
-Database.db
-Datbase.db
+User.db
+Machine.db
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

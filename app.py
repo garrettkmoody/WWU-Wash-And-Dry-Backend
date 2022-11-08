@@ -19,6 +19,7 @@ app.config.from_mapping(
     AZURE_OAUTH_TENANCY=str(os.environ.get("TENANT_ID")),
     AZURE_OAUTH_CLIENT_SECRET=str(os.environ.get("CLIENT_SECRET")),
     AZURE_OAUTH_APPLICATION_ID=str(os.environ.get("APPLICATION_ID")),
+    ENVIRONMENT=str(os.environ.get("ENVIRONMENT")),
 )
 try:
     MAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
@@ -47,8 +48,7 @@ class User(db.Model):
     email = db.Column(db.String(70), unique=True)
 
     #pylint: disable=C0103, W0622
-    def __init__(self, id, public_id, name, email):
-        self.id = id
+    def __init__(self, public_id, name, email):
         self.public_id = public_id
         self.name = name
         self.email = email
@@ -71,6 +71,7 @@ class Machine(db.Model):
     finish_time = db.Column(db.Integer)
     user_name = db.Column(db.String(100))
     #pylint: disable=C0103,W0622
+
     def __init__(
         self,
         public_id,
@@ -137,13 +138,14 @@ def callback():
         "client_id": app.config["AZURE_OAUTH_APPLICATION_ID"],
         "code": request.args.get("code"),
         "client_secret": app.config["AZURE_OAUTH_CLIENT_SECRET"],
+        "redirect_uri": 'http://localhost:5000/login/callback' if app.config["ENVIRONMENT"] == 'testing'
+        else 'https://172.27.4.142:5000/login/callback'
     }
     request_data = requests.post(
         url="https://login.microsoftonline.com/d958f048-e431-4277-9c8d-ebfb75e7aa64/oauth2/v2.0/token",
         data=body,
     )
     data = request_data.json()
-
     try:
         auth_headers = {"Authorization": "Bearer " + data["access_token"]}
         user_response = requests.get(
@@ -152,11 +154,11 @@ def callback():
         user_data = user_response.json()
         if not User.query.filter_by(public_id=user_data["id"]).first():
             #pylint: disable=E1120
-            #Need to work this out
+            # Need to work this out
             new_user = User(
-                public_id=user_data["id"],
-                name=user_data["displayName"],
-                email=user_data["mail"],
+                user_data["id"],
+                user_data["displayName"],
+                user_data["mail"],
             )
             db.session.add(new_user)
             db.session.commit()
@@ -170,9 +172,11 @@ def callback():
             app.config["SECRET_KEY"],
             "HS256",
         )
-        return redirect("http://www.google.com?token=" + token)
+        print("Authentication Successful!")
+        return redirect("https://reece-reklai.github.io/DormitoryWasherAndDryer/?token=" + token)
     except:
-        return redirect("http://www.google.com?error=AuthFailed")
+        print("Auth failed")
+        return redirect("https://reece-reklai.github.io/DormitoryWasherAndDryer/?error=AuthFailed")
 
 @app.route("/machine/<int:requested_id>", methods=["GET", "DELETE", "POST"])
 def machine_by_id(requested_id):
@@ -391,6 +395,8 @@ def user_by_id(requested_user_id):
     return jsonify("There was an error")
 
 # not found error
+
+
 @app.errorhandler(404)
 def catch_not_found(error):
     """
