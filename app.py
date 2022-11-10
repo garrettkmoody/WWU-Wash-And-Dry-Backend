@@ -1,4 +1,4 @@
-#pylint: disable=E1101,W0702,C0301, W3101, W0621, C0114, R0903, R0913, R0902
+# pylint: disable=E1101,W0702,C0301, W3101, W0621, C0114, R0903, R0913, R0902
 import datetime
 import os
 from functools import wraps
@@ -41,19 +41,21 @@ mail = Mail(app)
 
 MSG_SUBJECT = "Laundry Done"
 MSG_BODY = "This needs to be implemented"
-TIMER = 60 #How often to check when to send notification in seconds
+TIMER = 60  # How often to check when to send notification in seconds
+
 
 class User(db.Model):
     """
     User class
     Init: id, public_id, name, and email
     """
+
     id = db.Column(db.Integer, primary_key=True)
     public_id = db.Column(db.String(50), unique=True)
     name = db.Column(db.String(100))
     email = db.Column(db.String(70), unique=True)
 
-    #pylint: disable=C0103, W0622
+    # pylint: disable=C0103, W0622
     def __init__(self, public_id, name, email):
         self.public_id = public_id
         self.name = name
@@ -65,6 +67,7 @@ class Machine(db.Model):
     Machine Class
     Init: id, floor_id, dorm, status, last_service_date, installation_date
     """
+
     __bind_key__ = "machine"
     id = db.Column(db.Integer, primary_key=True)
     public_id = db.Column(db.Integer, unique=True)
@@ -76,7 +79,7 @@ class Machine(db.Model):
     installation_date = db.Column(db.String)
     finish_time = db.Column(db.Integer)
     user_name = db.Column(db.String(100))
-    #pylint: disable=C0103,W0622
+    # pylint: disable=C0103,W0622
 
     def __init__(
         self,
@@ -88,7 +91,7 @@ class Machine(db.Model):
         last_sevice_date,
         installation_date,
         finish_time,
-        user_name
+        user_name,
     ):
         self.public_id = public_id
         self.floor_id = floor_id
@@ -103,6 +106,7 @@ class Machine(db.Model):
 
 with app.app_context():
     db.create_all()
+
 
 def send_email(testing, msg_subject, msg_body, msg_recipients):
     """
@@ -138,6 +142,7 @@ def token_required(function_decorator):
     """
     Token Function Decorator
     """
+
     @wraps(function_decorator)
     def decorator(*args, **kwargs):
         token = None
@@ -175,8 +180,9 @@ def callback():
         "client_id": app.config["AZURE_OAUTH_APPLICATION_ID"],
         "code": request.args.get("code"),
         "client_secret": app.config["AZURE_OAUTH_CLIENT_SECRET"],
-        "redirect_uri": 'http://localhost:5000/login/callback' if app.config["ENVIRONMENT"] == 'testing'
-        else 'https://172.27.4.142:5000/login/callback'
+        "redirect_uri": "http://localhost:5000/login/callback"
+        if app.config["ENVIRONMENT"] == "testing"
+        else "https://172.27.4.142:5000/login/callback",
     }
     request_data = requests.post(
         url="https://login.microsoftonline.com/d958f048-e431-4277-9c8d-ebfb75e7aa64/oauth2/v2.0/token",
@@ -190,7 +196,7 @@ def callback():
         )
         user_data = user_response.json()
         if not User.query.filter_by(public_id=user_data["id"]).first():
-            #pylint: disable=E1120
+            # pylint: disable=E1120
             # Need to work this out
             new_user = User(
                 user_data["id"],
@@ -210,10 +216,15 @@ def callback():
             "HS256",
         )
         print("Authentication Successful!")
-        return redirect("https://reece-reklai.github.io/DormitoryWasherAndDryer/?token=" + token)
+        return redirect(
+            "https://reece-reklai.github.io/DormitoryWasherAndDryer/?token=" + token
+        )
     except:
         print("Auth failed")
-        return redirect("https://reece-reklai.github.io/DormitoryWasherAndDryer/?error=AuthFailed")
+        return redirect(
+            "https://reece-reklai.github.io/DormitoryWasherAndDryer/?error=AuthFailed"
+        )
+
 
 @app.route("/machine/<int:requested_id>", methods=["GET", "DELETE", "POST"])
 def machine_by_id(requested_id):
@@ -256,7 +267,7 @@ def machine_by_id(requested_id):
                     last_service_date,
                     installation_date,
                     None,
-                    None
+                    None,
                 )
                 db.session.add(new_machine)
                 db.session.commit()
@@ -264,8 +275,6 @@ def machine_by_id(requested_id):
                 error = f"Machine {requested_id} is already registered."
         flash(error)
         return jsonify(f"created information for machine with ID: {requested_id}")
-
-
 
     if request.method == "GET":
         machine_info = Machine.query.filter_by(public_id=requested_id).first_or_404()
@@ -279,7 +288,7 @@ def machine_by_id(requested_id):
                 "Last_Service_Date": machine_info.last_service_date,
                 "Installation_Date": machine_info.installation_date,
                 "Finish_Time": machine_info.finish_time,
-                "User_Name": machine_info.user_name
+                "User_Name": machine_info.user_name,
             }
         )
     if request.method == "DELETE":
@@ -294,7 +303,7 @@ def machine_by_id(requested_id):
 
 @app.route(
     "/machine/<string:requested_dorm>/<int:requested_floor>/<int:requested_floor_id>",
-    methods=["GET","PUT"],
+    methods=["GET", "PUT"],
 )
 def machine_by_dorm_floor_floor_id(requested_dorm, requested_floor, requested_floor_id):
     """
@@ -306,21 +315,32 @@ def machine_by_dorm_floor_floor_id(requested_dorm, requested_floor, requested_fl
         machine_info = Machine.query.filter_by(
             floor_id=requested_floor_id, floor=requested_floor, dorm=requested_dorm
         ).first_or_404()
-        return jsonify([machine_info.public_id, machine_info.status])
+        return jsonify(
+            {"Public_ID": machine_info.public_id, "Status": machine_info.status}
+        )
     if request.method == "PUT":
         status = request.args.get("status")
         user_name = request.args.get("user_name")
         machine_info = Machine.query.filter_by(
             floor_id=requested_floor_id, floor=requested_floor, dorm=requested_dorm
         ).first_or_404()
-        machine_info.status  = status
+        machine_info.status = status
         if status == "in_use":
-            #Sets end time 30 minutes from current time
-            machine_info.finish_time = int((time.time_ns() + 1.8 * 10 ** 12)/60000000000)
+            # Sets end time 30 minutes from current time
+            machine_info.finish_time = int(
+                (time.time_ns() + 1.8 * 10**12) / 60000000000
+            )
             machine_info.user_name = user_name
         else:
             machine_info.finish_time = None
-        return jsonify([machine_info.public_id, machine_info.status, machine_info.user_name, machine_info.finish_time])
+        return jsonify(
+            {
+                "Public_ID": machine_info.public_id,
+                "Status": machine_info.status,
+                "User_Name": machine_info.user_name,
+                "Finish_Time": machine_info.finish_time,
+            }
+        )
     abort(400)
     return jsonify("There was an error.")
 
@@ -339,11 +359,12 @@ def machines_by_dorm_and_floor(requested_dorm, requested_floor):
     counter = 0
     request_objects = []
     while machine_info_length != 0:
-        request_return_object = []
-        request_return_object.append(machine_info[counter].public_id)
-        request_return_object.append(machine_info[counter].floor_id)
-        request_return_object.append(machine_info[counter].status)
-        request_objects.append(request_return_object)
+        request_return_dicts = {
+            "Public_ID": machine_info[counter].public_id,
+            "Floor_ID": machine_info[counter].floor_id,
+            "Status": machine_info[counter].status,
+        }
+        request_objects.append(request_return_dicts)
         machine_info_length -= 1
         counter += 1
     return jsonify(request_objects)
@@ -361,15 +382,17 @@ def machines_by_dorm(requested_dorm):
     counter = 0
     request_objects = []
     while machine_info_length != 0:
-        request_return_object = []
-        request_return_object.append(machine_info[counter].public_id)
-        request_return_object.append(machine_info[counter].floor)
-        request_return_object.append(machine_info[counter].floor_id)
-        request_return_object.append(machine_info[counter].status)
-        request_objects.append(request_return_object)
+        request_return_dict = {
+            "Public_ID": machine_info[counter].public_id,
+            "Floor": machine_info[counter].floor,
+            "Floor_ID": machine_info[counter].floor_id,
+            "Status": machine_info[counter].status,
+        }
+        request_objects.append(request_return_dict)
         machine_info_length -= 1
         counter += 1
     return jsonify(request_objects)
+
 
 # Unprotected route, no token required
 @app.route("/unprotected")
@@ -405,9 +428,7 @@ def user_by_id(requested_user_id):
     if request.method == "GET":
         # Filter can be changed later to be more secure
         # First_or_404 will abort if not found and send a 404
-        user_info = User.query.filter_by(
-            public_id=requested_user_id
-        ).first_or_404()
+        user_info = User.query.filter_by(public_id=requested_user_id).first_or_404()
         return jsonify(
             {
                 "Name": user_info.name,
@@ -417,17 +438,14 @@ def user_by_id(requested_user_id):
         )
     if request.method == "DELETE":
         # Filter can be changed later to be more secure
-        delete_request = User.query.filter_by(
-            public_id=requested_user_id
-        ).delete()
+        delete_request = User.query.filter_by(public_id=requested_user_id).delete()
         db.session.commit()
         if delete_request:
-            return jsonify(
-                f"deleted information for user with ID: {requested_user_id}"
-            )
+            return jsonify(f"deleted information for user with ID: {requested_user_id}")
         abort(404)
     abort(400)
     return jsonify("There was an error")
+
 
 @app.route("/send-notifications")
 def send_notifications():
@@ -437,18 +455,22 @@ def send_notifications():
     Input Arguments: None
     Returns: Void
     """
-    current_time = int(time.time_ns()/60000000000)
-    finished_machines = Machine.query.filter_by(finish_time = current_time).all()
+    current_time = int(time.time_ns() / 60000000000)
+    finished_machines = Machine.query.filter_by(finish_time=current_time).all()
     counter = 0
     while counter < len(finished_machines):
         finished_machines[counter].status = "pick_up_laundry"
         finished_machines[counter].finish_time = None
-        user = User.query.filter_by(name = finished_machines[counter].user_name).first_or_404()
+        user = User.query.filter_by(
+            name=finished_machines[counter].user_name
+        ).first_or_404()
         send_email(False, MSG_SUBJECT, MSG_BODY, user.email)
         finished_machines[counter].user_name = None
         db.session.commit()
-        counter+=1
+        counter += 1
     return jsonify("Notifications sent")
+
+
 # not found error
 
 
