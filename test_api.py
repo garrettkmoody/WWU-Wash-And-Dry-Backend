@@ -7,7 +7,13 @@ Test functions to ensure functionality of WWU-Wash-And-Dry-Backend's API endpoin
 import time
 import json
 import pytest
-from app import app, Machine, User, db, send_email
+from init import configure_app
+from models.machine import Machine
+from models.user import User
+from routes.notification import send_email
+from extensions import db, app
+
+app = configure_app(app)
 
 # Test Parameters for User
 USER_TEST_ID = 1
@@ -30,7 +36,6 @@ MACHINE_TEST_USER_NAME = None
 RECIPIENTS = ["WWU-Wash-And-Dry@outlook.com"]
 BODY = "Testing email"
 SUBJECT = "Testing"
-
 
 # This pytest fixture allows us to update database within our test file.
 @pytest.fixture(name="app_context")
@@ -340,7 +345,18 @@ def test_get_machines_by_dorm(app_context):
         {"Public_ID": 3, "Floor": 3, "Floor_ID": 3, "Status": "free"},
     ]
 
+def test_email_failure(app_context):
+    """
+    This method tests a failed send_email function call
+    Input Arguments: app_context
+    Returns: Void
+    """
+    response = send_email(SUBJECT, BODY, [])
+    assert response.status_code == 400
 
+
+
+#test_email_success is implicitly used in this test, no need for separate test
 def test_send_notifications(app_context):
     """
     This function tests a successful send notification call
@@ -349,7 +365,7 @@ def test_send_notifications(app_context):
     Input Arguments: app_context
     Returns: Void
     """
-    new_user = User(USER_TEST_PUBLIC_ID, "Taylor", "taylor.smith@wallawalla.edu")
+    new_user = User(USER_TEST_PUBLIC_ID, "Taylor", "WWU-Wash-And-Dry@outlook.com")
     db.session.add(new_user)
     new_machine = Machine(
         MACHINE_TEST_PUBLIC_ID,
@@ -369,29 +385,9 @@ def test_send_notifications(app_context):
         public_id=MACHINE_TEST_PUBLIC_ID
     ).first_or_404()
     User.query.filter_by(public_id=USER_TEST_PUBLIC_ID).delete()
+    Machine.query.filter_by(public_id=USER_TEST_PUBLIC_ID).delete()
     Machine.query.filter_by(public_id=MACHINE_TEST_PUBLIC_ID).delete()
     db.session.commit()
     assert test_machine.status == "pick_up_laundry"
     assert test_machine.finish_time is None
     assert test_machine.user_name is None
-
-
-def test_send_email(app_context):
-    """
-    This method tests a successful send_email function call
-    Input Arguments: app_context
-    Returns: Void
-    """
-    response = send_email(True, SUBJECT, BODY, RECIPIENTS)
-    assert response.status_code == 200
-    assert json.loads(response.data) == "Email was successfully sent"
-
-
-def test_email_failure(app_context):
-    """
-    This method tests a failed send_email function call
-    Input Arguments: app_context
-    Returns: Void
-    """
-    response = send_email(True, SUBJECT, BODY, [])
-    assert response.status_code == 400
