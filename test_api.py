@@ -345,19 +345,6 @@ def test_get_machines_by_dorm(app_context):
         {"Public_ID": 3, "Floor": 3, "Floor_ID": 3, "Status": "free"},
     ]
 
-
-#pylint: disable = W0105
-def test_send_email(app_context):
-    """
-    This method tests a successful send_email function call
-    Input Arguments: app_context
-    Returns: Void
-    """
-    response = send_email(SUBJECT, BODY, RECIPIENTS)
-    assert response.status_code == 200
-    assert json.loads(response.data) == "Email was successfully sent"
-
-
 def test_email_failure(app_context):
     """
     This method tests a failed send_email function call
@@ -368,6 +355,8 @@ def test_email_failure(app_context):
     assert response.status_code == 400
 
 
+
+#test_email_success is implicitly used in this test, no need for separate test
 def test_send_notifications(app_context):
     """
     This function tests a successful send notification call
