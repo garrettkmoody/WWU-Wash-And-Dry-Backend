@@ -1,3 +1,9 @@
+"""
+This file holds the API routes for the error handlers
+"""
+
+#pylint: disable = W0621
+
 from flask import Blueprint, jsonify
 
 error = Blueprint('error',__name__)

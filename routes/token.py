@@ -1,5 +1,11 @@
-from flask import Blueprint, jsonify, request
+"""
+This file holds the API routes for access tokens
+"""
+
+#pylint: disable = W0621, W0702
+
 from functools import wraps
+from flask import Blueprint, jsonify, request
 import jwt
 from extensions import db
 
@@ -47,7 +53,3 @@ def protected(current_user):
     Returns: A json message that greets the current user
     """
     return jsonify("Hello " + current_user.name)
-
-
-
-

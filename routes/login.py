@@ -1,8 +1,10 @@
+"""
+This file holds the API routes for SSO login
+"""
+import datetime
 from flask import Blueprint, request, redirect
 import requests
 import jwt
-import datetime
-
 from extensions import db
 from models.user import User
 

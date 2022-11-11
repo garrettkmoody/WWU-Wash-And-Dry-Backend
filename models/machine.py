@@ -1,3 +1,8 @@
+"""
+This file holds the Machine Model
+"""
+
+#pylint: disable = R0913, R0903, R0902
 
 from extensions import db
 

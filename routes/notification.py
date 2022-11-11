@@ -1,7 +1,12 @@
+"""
+This file holds the API routes for sending notifications
+"""
+
+#pylint: disable = E1101, W0702
+
+import time
 from flask import Blueprint, jsonify, make_response
 from flask_mail import Message
-import time
-
 from extensions import db, mail
 from models.machine import Machine
 from models.user import User
@@ -25,15 +30,10 @@ def send_email(testing, msg_subject, msg_body, msg_recipients):
     and if there was an error it will return an error message with 400 status code
     """
     try:
-        '''
-        ASK HAYDEN
         if testing:
             app.config.update({"MAIL_SUPPRESS_SEND": True})
-            mail = Mail(app)
         else:
             app.config.update({"MAIL_SUPPRESS_SEND": False})
-            mail = Mail(app)
-        '''
         email = Message(
             subject=msg_subject,
             body=msg_body,

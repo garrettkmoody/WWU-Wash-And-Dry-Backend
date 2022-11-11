@@ -375,6 +375,7 @@ def test_send_notifications(app_context):
     assert test_machine.finish_time is None
     assert test_machine.user_name is None
 
+#pylint: disable = W0105
 '''This Currently Fails
 def test_send_email(app_context):
     """

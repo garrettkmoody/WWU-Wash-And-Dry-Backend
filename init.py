@@ -1,7 +1,12 @@
+"""
+File for the initialization of the app
+"""
+
+#pylint: disable = W0621
+
 import os
 from dotenv import load_dotenv
 from flask import Flask
-
 from extensions import db, mail, migrate
 from routes.error import error
 from routes.login import login
@@ -13,11 +18,21 @@ from routes.user import user
 #Include dotenv
 load_dotenv()
 
+
 def create_app():
-    # Create Flask Application
+    """
+    This function creates an app instance with the proper app
+    configurations, mail configurations, registered blueprints,
+    and database creation.
+
+    Input Arguments: None
+    Returns: App instance
+    """
+
+    #Create Flask Application
     app = Flask(__name__)
 
-    #Configurations
+    #App Configurations
     app.config.from_mapping(
         SECRET_KEY=str(os.environ.get("SECRET_KEY")),
         SQLALCHEMY_DATABASE_URI="sqlite:///User.db",
@@ -28,6 +43,7 @@ def create_app():
         AZURE_OAUTH_APPLICATION_ID=str(os.environ.get("APPLICATION_ID")),
         ENVIRONMENT=str(os.environ.get("ENVIRONMENT")),
     )
+    #pylint: disable = C0103, W0702
     try:
         MAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
     except:
@@ -43,14 +59,16 @@ def create_app():
     }
     app.config.update(mail_settings)
 
+    #Initialize database, mail, and migrate
     db.init_app(app)
     mail.init_app(app)
     migrate.init_app(app, db)
 
+    #Create the database
     with app.app_context():
         db.create_all()
 
-
+    #Register blueprints for routes
     app.register_blueprint(error)
     app.register_blueprint(login)
     app.register_blueprint(machine)
@@ -58,7 +76,10 @@ def create_app():
     app.register_blueprint(token)
     app.register_blueprint(user)
 
+    #Return an instance of the app
     return app
 
-app = create_app()
-app.run()
+#Main Driver Function
+if __name__ == "__main__":
+    app = create_app()
+    app.run()

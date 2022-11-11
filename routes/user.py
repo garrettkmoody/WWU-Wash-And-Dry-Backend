@@ -1,5 +1,10 @@
-from flask import Blueprint, request, jsonify, abort
+"""
+This file holds the API routes for get, delete, and put users
+"""
 
+#pylint: disable = E1101
+
+from flask import Blueprint, request, jsonify, abort
 from extensions import db
 from models.user import User
 

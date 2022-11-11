@@ -1,3 +1,9 @@
+"""
+This file holds the User Model
+"""
+
+#pylint: disable = R0903
+
 from extensions import db
 
 class User(db.Model):
@@ -16,5 +22,3 @@ class User(db.Model):
         self.public_id = public_id
         self.name = name
         self.email = email
-
-

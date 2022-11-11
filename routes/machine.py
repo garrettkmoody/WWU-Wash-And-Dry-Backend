@@ -1,6 +1,11 @@
-from flask import Blueprint, request, jsonify, flash, abort
-import time
+"""
+This file holds the API routes for post, get, delete, and put machines
+"""
 
+#pylint: disable = C0301, E1101
+
+import time
+from flask import Blueprint, request, jsonify, flash, abort
 from extensions import db
 from models.machine import Machine
 
