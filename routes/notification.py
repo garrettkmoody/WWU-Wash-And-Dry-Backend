@@ -7,7 +7,7 @@ This file holds the API routes for sending notifications
 import time
 from flask import Blueprint, jsonify, make_response
 from flask_mail import Message
-from extensions import db, mail, app
+from extensions import db, mail
 from models.machine import Machine
 from models.user import User
 
@@ -41,7 +41,7 @@ def send_email(msg_subject, msg_body, msg_recipients):
         return jsonify("Email was successfully sent")
     except:
         return make_response("Could not send email.",400)
-        
+
 
 @notification.route("/send-notifications")
 def send_notifications():

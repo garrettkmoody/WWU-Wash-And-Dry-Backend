@@ -1,6 +1,9 @@
 """
 This file holds the API routes for SSO login
 """
+
+#pylint: disable = C0301, W3101, W0702, W3101, E1101
+
 import datetime
 from flask import Blueprint, request, redirect
 import requests

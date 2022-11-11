@@ -102,7 +102,9 @@ def machine_by_dorm_floor_floor_id(requested_dorm, requested_floor, requested_fl
         machine_info = Machine.query.filter_by(
             floor_id=requested_floor_id, floor=requested_floor, dorm=requested_dorm
         ).first_or_404()
-        return jsonify([machine_info.public_id, machine_info.status])
+        return jsonify(
+            {"Public_ID": machine_info.public_id, "Status": machine_info.status}
+        )
     if request.method == "PUT":
         status = request.args.get("status")
         user_name = request.args.get("user_name")
@@ -116,7 +118,14 @@ def machine_by_dorm_floor_floor_id(requested_dorm, requested_floor, requested_fl
             machine_info.user_name = user_name
         else:
             machine_info.finish_time = None
-        return jsonify([machine_info.public_id, machine_info.status, machine_info.user_name, machine_info.finish_time])
+        return jsonify(
+            {
+                "Public_ID": machine_info.public_id,
+                "Status": machine_info.status,
+                "User_Name": machine_info.user_name,
+                "Finish_Time": machine_info.finish_time,
+            }
+        )
     abort(400)
     return jsonify("There was an error.")
 
@@ -135,11 +144,12 @@ def machines_by_dorm_and_floor(requested_dorm, requested_floor):
     counter = 0
     request_objects = []
     while machine_info_length != 0:
-        request_return_object = []
-        request_return_object.append(machine_info[counter].public_id)
-        request_return_object.append(machine_info[counter].floor_id)
-        request_return_object.append(machine_info[counter].status)
-        request_objects.append(request_return_object)
+        request_return_dicts = {
+            "Public_ID": machine_info[counter].public_id,
+            "Floor_ID": machine_info[counter].floor_id,
+            "Status": machine_info[counter].status,
+        }
+        request_objects.append(request_return_dicts)
         machine_info_length -= 1
         counter += 1
     return jsonify(request_objects)
@@ -157,12 +167,13 @@ def machines_by_dorm(requested_dorm):
     counter = 0
     request_objects = []
     while machine_info_length != 0:
-        request_return_object = []
-        request_return_object.append(machine_info[counter].public_id)
-        request_return_object.append(machine_info[counter].floor)
-        request_return_object.append(machine_info[counter].floor_id)
-        request_return_object.append(machine_info[counter].status)
-        request_objects.append(request_return_object)
+        request_return_dict = {
+            "Public_ID": machine_info[counter].public_id,
+            "Floor": machine_info[counter].floor,
+            "Floor_ID": machine_info[counter].floor_id,
+            "Status": machine_info[counter].status,
+        }
+        request_objects.append(request_return_dict)
         machine_info_length -= 1
         counter += 1
     return jsonify(request_objects)

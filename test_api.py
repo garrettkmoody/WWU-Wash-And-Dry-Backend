@@ -2,7 +2,7 @@
 Test functions to ensure functionality of WWU-Wash-And-Dry-Backend's API endpoints.
 """
 
-#pylint: disable = E1101, W0613
+# pylint: disable = E1101, W0613
 
 import time
 import json
@@ -119,7 +119,7 @@ def test_get_machine_by_id(app_context):
         MACHINE_TEST_LAST_SERVICE_DATE,
         MACHINE_TEST_INSTALLATION_DATE,
         MACHINE_TEST_FINISH_TIME,
-        MACHINE_TEST_USER_NAME
+        MACHINE_TEST_USER_NAME,
     )
     db.session.add(new_machine)
     db.session.commit()
@@ -137,7 +137,7 @@ def test_get_machine_by_id(app_context):
             "Last_Service_Date": "10/27/2022",
             "Installation_Date": "10/27/2022",
             "Finish_Time": None,
-            "User_Name": None
+            "User_Name": None,
         }
     )
 
@@ -157,7 +157,7 @@ def test_delete_machine_by_id(app_context):
         MACHINE_TEST_LAST_SERVICE_DATE,
         MACHINE_TEST_INSTALLATION_DATE,
         MACHINE_TEST_FINISH_TIME,
-        MACHINE_TEST_USER_NAME
+        MACHINE_TEST_USER_NAME,
     )
     db.session.add(new_machine)
     db.session.commit()
@@ -186,7 +186,7 @@ def test_create_machine_by_id(app_context):
             "last_service_date": MACHINE_TEST_LAST_SERVICE_DATE,
             "installation_date": MACHINE_TEST_INSTALLATION_DATE,
             "finish_time": MACHINE_TEST_FINISH_TIME,
-            "user_name": MACHINE_TEST_USER_NAME
+            "user_name": MACHINE_TEST_USER_NAME,
         },
     )
     Machine.query.filter_by(public_id=MACHINE_TEST_PUBLIC_ID).delete()
@@ -214,7 +214,7 @@ def test_get_machine_by_dorm_floor_floor_id(app_context):
         MACHINE_TEST_LAST_SERVICE_DATE,
         MACHINE_TEST_INSTALLATION_DATE,
         MACHINE_TEST_FINISH_TIME,
-        MACHINE_TEST_USER_NAME
+        MACHINE_TEST_USER_NAME,
     )
     db.session.add(new_machine)
     db.session.commit()
@@ -224,7 +224,7 @@ def test_get_machine_by_dorm_floor_floor_id(app_context):
     Machine.query.filter_by(public_id=MACHINE_TEST_PUBLIC_ID).delete()
     db.session.commit()
     assert response.status_code == 200
-    assert json.loads(response.data) == [1, "free"]
+    assert json.loads(response.data) == {"Public_ID": 1, "Status": "free"}
 
 
 def test_get_machines_by_dorm_floor(app_context):
@@ -244,7 +244,7 @@ def test_get_machines_by_dorm_floor(app_context):
         MACHINE_TEST_LAST_SERVICE_DATE,
         MACHINE_TEST_INSTALLATION_DATE,
         MACHINE_TEST_FINISH_TIME,
-        MACHINE_TEST_USER_NAME
+        MACHINE_TEST_USER_NAME,
     )
     new_machine1 = Machine(
         test_public_id[1],
@@ -255,7 +255,7 @@ def test_get_machines_by_dorm_floor(app_context):
         MACHINE_TEST_LAST_SERVICE_DATE,
         MACHINE_TEST_INSTALLATION_DATE,
         MACHINE_TEST_FINISH_TIME,
-        MACHINE_TEST_USER_NAME
+        MACHINE_TEST_USER_NAME,
     )
     new_machine2 = Machine(
         test_public_id[2],
@@ -266,7 +266,7 @@ def test_get_machines_by_dorm_floor(app_context):
         MACHINE_TEST_LAST_SERVICE_DATE,
         MACHINE_TEST_INSTALLATION_DATE,
         MACHINE_TEST_FINISH_TIME,
-        MACHINE_TEST_USER_NAME
+        MACHINE_TEST_USER_NAME,
     )
     db.session.add(new_machine0)
     db.session.add(new_machine1)
@@ -280,7 +280,11 @@ def test_get_machines_by_dorm_floor(app_context):
     Machine.query.filter_by(public_id=test_public_id[2]).delete()
     db.session.commit()
     assert response.status_code == 200
-    assert json.loads(response.data) == [[1, 1, "free"], [2, 2, "free"], [3, 3, "free"]]
+    assert json.loads(response.data) == [
+        {"Public_ID": 1, "Floor_ID": 1, "Status": "free"},
+        {"Public_ID": 2, "Floor_ID": 2, "Status": "free"},
+        {"Public_ID": 3, "Floor_ID": 3, "Status": "free"},
+    ]
 
 
 def test_get_machines_by_dorm(app_context):
@@ -301,7 +305,7 @@ def test_get_machines_by_dorm(app_context):
         MACHINE_TEST_LAST_SERVICE_DATE,
         MACHINE_TEST_INSTALLATION_DATE,
         MACHINE_TEST_FINISH_TIME,
-        MACHINE_TEST_USER_NAME
+        MACHINE_TEST_USER_NAME,
     )
     new_machine1 = Machine(
         test_public_id[1],
@@ -312,7 +316,7 @@ def test_get_machines_by_dorm(app_context):
         MACHINE_TEST_LAST_SERVICE_DATE,
         MACHINE_TEST_INSTALLATION_DATE,
         MACHINE_TEST_FINISH_TIME,
-        MACHINE_TEST_USER_NAME
+        MACHINE_TEST_USER_NAME,
     )
     new_machine2 = Machine(
         test_public_id[2],
@@ -323,7 +327,7 @@ def test_get_machines_by_dorm(app_context):
         MACHINE_TEST_LAST_SERVICE_DATE,
         MACHINE_TEST_INSTALLATION_DATE,
         MACHINE_TEST_FINISH_TIME,
-        MACHINE_TEST_USER_NAME
+        MACHINE_TEST_USER_NAME,
     )
     db.session.add(new_machine0)
     db.session.add(new_machine1)
@@ -336,10 +340,11 @@ def test_get_machines_by_dorm(app_context):
     db.session.commit()
     assert response.status_code == 200
     assert json.loads(response.data) == [
-        [1, 1, 1, "free"],
-        [2, 2, 2, "free"],
-        [3, 3, 3, "free"],
+        {"Public_ID": 1, "Floor": 1, "Floor_ID": 1, "Status": "free"},
+        {"Public_ID": 2, "Floor": 2, "Floor_ID": 2, "Status": "free"},
+        {"Public_ID": 3, "Floor": 3, "Floor_ID": 3, "Status": "free"},
     ]
+
 
 #pylint: disable = W0105
 def test_send_email(app_context):
@@ -371,7 +376,7 @@ def test_send_notifications(app_context):
     Input Arguments: app_context
     Returns: Void
     """
-    new_user = User(USER_TEST_PUBLIC_ID, "Taylor", "taylor.smith@wallawalla.edu")
+    new_user = User(USER_TEST_PUBLIC_ID, "Taylor", "WWU-Wash-And-Dry@outlook.com")
     db.session.add(new_user)
     new_machine = Machine(
         MACHINE_TEST_PUBLIC_ID,
@@ -381,13 +386,15 @@ def test_send_notifications(app_context):
         "in_use",
         MACHINE_TEST_LAST_SERVICE_DATE,
         MACHINE_TEST_INSTALLATION_DATE,
-        int((time.time_ns()/60000000000)),
-        "Taylor"
+        int((time.time_ns() / 60000000000)),
+        "Taylor",
     )
     db.session.add(new_machine)
     db.session.commit()
     app.test_client().get("/send-notifications")
-    test_machine = Machine.query.filter_by(public_id = MACHINE_TEST_PUBLIC_ID).first_or_404()
+    test_machine = Machine.query.filter_by(
+        public_id=MACHINE_TEST_PUBLIC_ID
+    ).first_or_404()
     User.query.filter_by(public_id=USER_TEST_PUBLIC_ID).delete()
     Machine.query.filter_by(public_id=USER_TEST_PUBLIC_ID).delete()
     Machine.query.filter_by(public_id=MACHINE_TEST_PUBLIC_ID).delete()
