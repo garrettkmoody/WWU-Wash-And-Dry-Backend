@@ -7,7 +7,7 @@ This file holds the API routes for access tokens
 from functools import wraps
 from flask import Blueprint, jsonify, request
 import jwt
-from extensions import db
+from extensions import db, app
 
 token = Blueprint('token', __name__)
 

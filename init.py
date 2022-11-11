@@ -6,8 +6,7 @@ File for the initialization of the app
 
 import os
 from dotenv import load_dotenv
-from flask import Flask
-from extensions import db, mail, migrate
+from extensions import db, mail, migrate, app
 from routes.error import error
 from routes.login import login
 from routes.machine import machine
@@ -18,8 +17,7 @@ from routes.user import user
 #Include dotenv
 load_dotenv()
 
-
-def create_app():
+def configure_app(app):
     """
     This function creates an app instance with the proper app
     configurations, mail configurations, registered blueprints,
@@ -28,9 +26,6 @@ def create_app():
     Input Arguments: None
     Returns: App instance
     """
-
-    #Create Flask Application
-    app = Flask(__name__)
 
     #App Configurations
     app.config.from_mapping(
@@ -56,6 +51,7 @@ def create_app():
         "MAIL_USE_SSL": False,
         "MAIL_USERNAME": "WWU-Wash-And-Dry@outlook.com",
         "MAIL_PASSWORD": MAIL_PASSWORD,
+        "MAIL_SUPPRESS": True,
     }
     app.config.update(mail_settings)
 
@@ -81,5 +77,5 @@ def create_app():
 
 #Main Driver Function
 if __name__ == "__main__":
-    app = create_app()
+    app = configure_app(app)
     app.run()

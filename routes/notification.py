@@ -7,18 +7,19 @@ This file holds the API routes for sending notifications
 import time
 from flask import Blueprint, jsonify, make_response
 from flask_mail import Message
-from extensions import db, mail
+from extensions import db, mail, app
 from models.machine import Machine
 from models.user import User
 
 notification = Blueprint('notification', __name__)
 
-#Mail Constants
-MSG_SUBJECT = "Laundry Done"
-MSG_BODY = "This needs to be implemented"
 TIMER = 60 #How often to check when to send notification in seconds
 
-def send_email(testing, msg_subject, msg_body, msg_recipients):
+RECIPIENTS = ["WWU-Wash-And-Dry@outlook.com"]
+MSG_BODY = "Yo, go get your laundry"
+MSG_SUBJECT = "Laundry is Done"
+
+def send_email(msg_subject, msg_body, msg_recipients):
     """
     Sends an email from WWU-Wash-And-Dry@outlook.com
     Input Arguments:
@@ -30,10 +31,6 @@ def send_email(testing, msg_subject, msg_body, msg_recipients):
     and if there was an error it will return an error message with 400 status code
     """
     try:
-        if testing:
-            app.config.update({"MAIL_SUPPRESS_SEND": True})
-        else:
-            app.config.update({"MAIL_SUPPRESS_SEND": False})
         email = Message(
             subject=msg_subject,
             body=msg_body,
@@ -43,7 +40,8 @@ def send_email(testing, msg_subject, msg_body, msg_recipients):
         mail.send(email)
         return jsonify("Email was successfully sent")
     except:
-        return make_response("Could not send email.", 400)
+        return make_response("Could not send email.",400)
+        
 
 @notification.route("/send-notifications")
 def send_notifications():
@@ -60,7 +58,7 @@ def send_notifications():
         finished_machines[counter].status = "pick_up_laundry"
         finished_machines[counter].finish_time = None
         user = User.query.filter_by(name = finished_machines[counter].user_name).first_or_404()
-        send_email(False, MSG_SUBJECT, MSG_BODY, user.email)
+        send_email(MSG_SUBJECT, MSG_BODY, [user.email])
         finished_machines[counter].user_name = None
         db.session.commit()
         counter+=1

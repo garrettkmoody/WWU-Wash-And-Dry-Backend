@@ -7,13 +7,13 @@ Test functions to ensure functionality of WWU-Wash-And-Dry-Backend's API endpoin
 import time
 import json
 import pytest
-from init import create_app
+from init import configure_app
 from models.machine import Machine
 from models.user import User
 from routes.notification import send_email
-from extensions import db
+from extensions import db, app
 
-app = create_app()
+app = configure_app(app)
 
 # Test Parameters for User
 USER_TEST_ID = 1
@@ -341,6 +341,27 @@ def test_get_machines_by_dorm(app_context):
         [3, 3, 3, "free"],
     ]
 
+#pylint: disable = W0105
+def test_send_email(app_context):
+    """
+    This method tests a successful send_email function call
+    Input Arguments: app_context
+    Returns: Void
+    """
+    response = send_email(SUBJECT, BODY, RECIPIENTS)
+    assert response.status_code == 200
+    assert json.loads(response.data) == "Email was successfully sent"
+
+
+def test_email_failure(app_context):
+    """
+    This method tests a failed send_email function call
+    Input Arguments: app_context
+    Returns: Void
+    """
+    response = send_email(SUBJECT, BODY, [])
+    assert response.status_code == 400
+
 
 def test_send_notifications(app_context):
     """
@@ -374,25 +395,3 @@ def test_send_notifications(app_context):
     assert test_machine.status == "pick_up_laundry"
     assert test_machine.finish_time is None
     assert test_machine.user_name is None
-
-#pylint: disable = W0105
-'''This Currently Fails
-def test_send_email(app_context):
-    """
-    This method tests a successful send_email function call
-    Input Arguments: app_context
-    Returns: Void
-    """
-    response = send_email(True, SUBJECT, BODY, RECIPIENTS)
-    assert response.status_code == 200
-    assert json.loads(response.data) == "Email was successfully sent"
-'''
-
-def test_email_failure(app_context):
-    """
-    This method tests a failed send_email function call
-    Input Arguments: app_context
-    Returns: Void
-    """
-    response = send_email(True, SUBJECT, BODY, [])
-    assert response.status_code == 400
