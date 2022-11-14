@@ -7,11 +7,13 @@ This file holds the API routes for get, delete, and put users
 from flask import Blueprint, request, jsonify, abort
 from extensions import db
 from models.user import User
+from routes.token import token_required
 
 user = Blueprint('user', __name__)
 
 @user.route("/user/<requested_user_id>", methods=["GET", "DELETE"])
-def user_by_id(requested_user_id):
+@token_required
+def user_by_id(current_user, requested_user_id):
     """
     Endpoint for getting and deleting user by their public ID
     Parameters: Takes in a user public ID
