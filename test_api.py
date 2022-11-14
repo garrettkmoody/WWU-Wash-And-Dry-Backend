@@ -4,8 +4,10 @@ Test functions to ensure functionality of WWU-Wash-And-Dry-Backend's API endpoin
 
 # pylint: disable = E1101, W0613, W0105
 
+import datetime
 import time
 import json
+import jwt
 import pytest
 from routes.notification import send_email
 from init import configure_app
@@ -18,7 +20,7 @@ app = configure_app(app)
 # Test Parameters for User
 USER_TEST_ID = 1
 USER_TEST_NAME = "Hayden"
-USER_TEST_PUBLIC_ID = "1"
+USER_TEST_PUBLIC_ID = "10101"
 USER_TEST_EMAIL = "Walla Walla"
 
 # Test Parameters for Machine
@@ -38,6 +40,8 @@ BODY = "Testing email"
 SUBJECT = "Testing"
 
 # This pytest fixture allows us to update database within our test file.
+
+
 @pytest.fixture(name="app_context")
 def fixture_app_context():
     """
@@ -58,7 +62,6 @@ def test_unprotected_route():
     response = app.test_client().get("/unprotected")
     assert response.status_code == 200
     assert json.loads(response.data) == "No Token No problem!"
-
 
 def test_get_user(app_context):
     """
@@ -102,7 +105,6 @@ def test_delete_user(app_context):
         == f"deleted information for user with ID: {USER_TEST_PUBLIC_ID}"
     )
 
-
 #---------------------------CREATE MACHINE BY ID--------------------------------------
 
 def test_successful_create_machine_by_id_1(app_context):
@@ -122,6 +124,7 @@ def test_successful_create_machine_by_id_1(app_context):
             "last_service_date": MACHINE_TEST_LAST_SERVICE_DATE,
             "installation_date": MACHINE_TEST_INSTALLATION_DATE,
         },
+        headers={"access_token": get_mock_token()}
     )
     assert response.status_code == 200
     assert (
@@ -146,6 +149,7 @@ def test_failed_create_machine_by_id_1(app_context):
             "last_service_date": MACHINE_TEST_LAST_SERVICE_DATE,
             "installation_date": MACHINE_TEST_INSTALLATION_DATE,
         },
+        headers={"access_token": get_mock_token()}
     )
     assert response.status_code == 500
 
@@ -166,6 +170,7 @@ def test_failed_create_machine_by_id_2(app_context):
             "last_service_date": MACHINE_TEST_LAST_SERVICE_DATE,
             "installation_date": MACHINE_TEST_INSTALLATION_DATE,
         },
+        headers={"access_token": get_mock_token()}
     )
     assert response.status_code == 500
 
@@ -185,6 +190,7 @@ def test_failed_create_machine_by_id_3(app_context):
             "last_service_date": MACHINE_TEST_LAST_SERVICE_DATE,
             "installation_date": MACHINE_TEST_INSTALLATION_DATE,
         },
+        headers={"access_token": get_mock_token()}
     )
     assert response.status_code == 400
     assert (
@@ -201,7 +207,8 @@ def test_successful_get_machine_by_id(app_context):
     Input Arguments: app_context
     Returns: Void
     """
-    response = app.test_client().get(f"/machine/{MACHINE_TEST_PUBLIC_ID}")
+    response = app.test_client().get(f"/machine/{MACHINE_TEST_PUBLIC_ID}",
+      headers={"access_token": get_mock_token()})
     assert response.status_code == 200
     assert json.loads(response.data) == (
         {
@@ -224,7 +231,8 @@ def test_failed_get_machine_by_id(app_context):
     Input Arguments: app_context
     Returns: Void
     """
-    response = app.test_client().get("/machine/400")
+    response = app.test_client().get("/machine/400",
+      headers={"access_token": get_mock_token()})
     assert response.status_code == 404
 
 #---------------------------PUT MACHINE BY ID--------------------------------------
@@ -236,6 +244,7 @@ def test_successful_put_machine_by_id_1(app_context):
     Input Arguments: app_context
     Returns: Void
     """
+
     response = app.test_client().put(f"/machine/{MACHINE_TEST_PUBLIC_ID}",
         query_string={
             "floor_id": 5,
@@ -246,7 +255,8 @@ def test_successful_put_machine_by_id_1(app_context):
             "dorm": MACHINE_TEST_DORM,
             "finish_time": 10,
             "user_name": "Taylor"
-        } )
+        },
+        headers={"access_token": get_mock_token()})
     assert response.status_code == 200
     assert json.loads(response.data) == (
         {
@@ -278,7 +288,8 @@ def test_successful_put_machine_by_id_2(app_context):
             "installation_date": MACHINE_TEST_INSTALLATION_DATE,
             "dorm": MACHINE_TEST_DORM,
             "user_name": "Smith"
-        } )
+        },
+        headers={"access_token": get_mock_token()})
     assert response.status_code == 200
     assert json.loads(response.data) == (
         {
@@ -311,7 +322,8 @@ def test_failed_put_machine_by_id(app_context):
             "dorm": MACHINE_TEST_DORM,
             "finish_time": MACHINE_TEST_FINISH_TIME,
             "user_name": "Taylor"
-        } )
+        },
+        headers={"access_token": get_mock_token()})
     assert response.status_code == 500
 
 #---------------------------DELETE MACHINE BY ID--------------------------------------
@@ -323,7 +335,8 @@ def test_successful_delete_machine_by_id(app_context):
     Input Arguments: app_context
     Returns: Void
     """
-    response = app.test_client().delete(f"/machine/{MACHINE_TEST_PUBLIC_ID}")
+    response = app.test_client().delete(f"/machine/{MACHINE_TEST_PUBLIC_ID}",
+        headers={"access_token": get_mock_token()})
     assert response.status_code == 200
     assert (
         json.loads(response.data)
@@ -338,7 +351,7 @@ def test_failed_delete_machine_by_id(app_context):
     Input Arguments: app_context
     Returns: Void
     """
-    response = app.test_client().delete("/machine/404")
+    response = app.test_client().delete("/machine/404", headers={"access_token": get_mock_token()})
     assert response.status_code == 404
 
 #---------------------------GET MACHINE BY DORM FLOOR FLOOR ID--------------------------------------
@@ -365,7 +378,8 @@ def test_successful_get_machine_by_dorm_floor_floor_id(app_context):
     db.session.add(new_machine)
     db.session.commit()
     response = app.test_client().get(
-        f"/machine/{MACHINE_TEST_DORM}/{MACHINE_TEST_FLOOR}/{MACHINE_TEST_FLOOR_ID}"
+        f"/machine/{MACHINE_TEST_DORM}/{MACHINE_TEST_FLOOR}/{MACHINE_TEST_FLOOR_ID}",
+        headers={"access_token": get_mock_token()}
     )
     Machine.query.filter_by(public_id=MACHINE_TEST_PUBLIC_ID).delete()
     db.session.commit()
@@ -386,7 +400,8 @@ def test_failed_get_machine_by_dorm_floor_floor_id(app_context):
     Returns: Void
     """
     response = app.test_client().get(
-        f"/machine/{MACHINE_TEST_DORM}/{MACHINE_TEST_FLOOR}/404"
+        f"/machine/{MACHINE_TEST_DORM}/{MACHINE_TEST_FLOOR}/404",
+        headers={"access_token": get_mock_token()}
     )
     assert response.status_code == 404
 
@@ -438,7 +453,8 @@ def test_get_machines_by_dorm_floor(app_context):
     db.session.add(new_machine2)
     db.session.commit()
     response = app.test_client().get(
-        f"/machine/{MACHINE_TEST_DORM}/{MACHINE_TEST_FLOOR}"
+        f"/machine/{MACHINE_TEST_DORM}/{MACHINE_TEST_FLOOR}",
+        headers={"access_token": get_mock_token()}
     )
     Machine.query.filter_by(public_id=test_public_id[0]).delete()
     Machine.query.filter_by(public_id=test_public_id[1]).delete()
@@ -461,7 +477,8 @@ def test_failed_get_machines_by_dorm_floor(app_context):
     Return: Void
     """
     response = app.test_client().get(
-        f"/machine/{MACHINE_TEST_DORM}/404"
+        f"/machine/{MACHINE_TEST_DORM}/404",
+        headers={"access_token": get_mock_token()}
     )
     assert response.status_code == 404
 '''
@@ -514,7 +531,8 @@ def test_get_machines_by_dorm(app_context):
     db.session.add(new_machine1)
     db.session.add(new_machine2)
     db.session.commit()
-    response = app.test_client().get(f"/machine/{MACHINE_TEST_DORM}")
+    response = app.test_client().get(f"/machine/{MACHINE_TEST_DORM}",
+    headers={"access_token": get_mock_token()})
     Machine.query.filter_by(public_id=test_public_id[0]).delete()
     Machine.query.filter_by(public_id=test_public_id[1]).delete()
     Machine.query.filter_by(public_id=test_public_id[2]).delete()
@@ -526,6 +544,7 @@ def test_get_machines_by_dorm(app_context):
         {"Public_ID": 3, "Floor": 3, "Floor_ID": 3, "Status": "free"},
     ]
 
+
 #TO-DO implement the code in the /routes/machine.py file for this test to pass
 '''
 def test_get_machines_by_dorm(app_context):
@@ -535,7 +554,8 @@ def test_get_machines_by_dorm(app_context):
     Input Arguments: app_context
     Returns: Void
     """
-    response = app.test_client().get(f"/machine/{MACHINE_TEST_DORM}")
+    response = app.test_client().get(f"/machine/{MACHINE_TEST_DORM}",
+    headers={"access_token": get_mock_token()})
     assert response.status_code == 404
 '''
 
@@ -552,8 +572,7 @@ def test_email_failure(app_context):
     assert response.status_code == 400
 
 
-
-#test_email_success is implicitly used in this test, no need for separate test
+# test_email_success is implicitly used in this test, no need for separate test
 def test_send_notifications(app_context):
     """
     This function tests a successful send notification call
@@ -588,3 +607,19 @@ def test_send_notifications(app_context):
     assert test_machine.status == "pick_up_laundry"
     assert test_machine.finish_time is None
     assert test_machine.user_name is None
+
+
+def get_mock_token():
+    """
+    Will return a temporary JWT token for authenticated test api calls
+
+    Returns: Token (String)
+    """
+    return jwt.encode(
+        {
+            "public_id": USER_TEST_PUBLIC_ID,
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=5),
+        },
+        app.config["SECRET_KEY"],
+        "HS256",
+    )

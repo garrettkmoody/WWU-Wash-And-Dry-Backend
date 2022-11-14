@@ -2,18 +2,22 @@
 This file holds the API routes for post, get, delete, and put machines
 """
 
+
 #pylint: disable = C0301, E1101, R0911, R0912, R0915
 
 import time
 from flask import Blueprint, request, jsonify, abort
 from extensions import db
 from models.machine import Machine
+from routes.token import token_required
 
 machine = Blueprint('machine', __name__)
 
+
 #TO-DO Implement tests for PUT and failed requests
 @machine.route("/machine/<int:requested_id>", methods=["GET", "DELETE", "POST", "PUT"])
-def machine_by_id(requested_id):
+@token_required
+def machine_by_id(current_user, requested_id):
     """
     Endpoint for getting/posting/deleting a machine by its ID
     Parameter: ID for the machine
@@ -139,7 +143,8 @@ def machine_by_id(requested_id):
     "/machine/<string:requested_dorm>/<int:requested_floor>/<int:requested_floor_id>",
     methods=["GET","PUT"],
 )
-def machine_by_dorm_floor_floor_id(requested_dorm, requested_floor, requested_floor_id):
+@token_required
+def machine_by_dorm_floor_floor_id(current_user, requested_dorm, requested_floor, requested_floor_id):
     """
     Endpoint for getting machine by dorm, floor, and floorid
     Paramters: Dorm, Floor number, and the floor id
@@ -187,7 +192,8 @@ def machine_by_dorm_floor_floor_id(requested_dorm, requested_floor, requested_fl
 
 
 @machine.route("/machine/<string:requested_dorm>/<int:requested_floor>", methods=["GET"])
-def machines_by_dorm_and_floor(requested_dorm, requested_floor):
+@token_required
+def machines_by_dorm_and_floor(current_user, requested_dorm, requested_floor):
     """
     Endpoint for getting machines by dorm and floor
     Parameter: Dorm and Floor number
@@ -212,7 +218,8 @@ def machines_by_dorm_and_floor(requested_dorm, requested_floor):
 
 
 @machine.route("/machine/<string:requested_dorm>", methods=["GET"])
-def machines_by_dorm(requested_dorm):
+@token_required
+def machines_by_dorm(current_user, requested_dorm):
     """
     Endpoint for getting machines by dorm
     Parameters: The requested dorm
