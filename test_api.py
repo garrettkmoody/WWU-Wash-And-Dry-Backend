@@ -74,7 +74,8 @@ def test_get_user(app_context):
     db.session.add(new_user)
     db.session.commit()
     # send request
-    response = app.test_client().get(f"/user/{USER_TEST_PUBLIC_ID}")
+    response = app.test_client().get(f"/user/{USER_TEST_PUBLIC_ID}",
+        headers={"access_token": get_mock_token()})
     # remove created user
     User.query.filter_by(public_id=USER_TEST_PUBLIC_ID).delete()
     db.session.commit()
@@ -98,7 +99,8 @@ def test_delete_user(app_context):
     new_user = User(USER_TEST_PUBLIC_ID, USER_TEST_NAME, USER_TEST_EMAIL)
     db.session.add(new_user)
     db.session.commit()
-    response = app.test_client().delete(f"/user/{USER_TEST_PUBLIC_ID}")
+    response = app.test_client().delete(f"/user/{USER_TEST_PUBLIC_ID}",
+        headers={"access_token": get_mock_token()})
     assert response.status_code == 200
     assert (
         json.loads(response.data)
