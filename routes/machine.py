@@ -2,7 +2,7 @@
 This file holds the API routes for post, get, delete, and put machines
 """
 
-#pylint: disable = C0301, E1101
+#pylint: disable = C0301, E1101, W0613
 
 import time
 from flask import Blueprint, request, jsonify, flash, abort
