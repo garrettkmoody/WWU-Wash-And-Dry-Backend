@@ -7,7 +7,8 @@ This file holds the API routes for access tokens
 from functools import wraps
 from flask import Blueprint, jsonify, request
 import jwt
-from extensions import db, app
+from extensions import app
+from models.user import User
 
 token = Blueprint('token', __name__)
 
@@ -25,7 +26,7 @@ def token_required(function_decorator):
             return jsonify({"message": "Missing Authentication Token!"}), 401
         try:
             data = jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])
-            current_user = db.query.filter_by(public_id=data["public_id"]).first()
+            current_user = User.query.filter_by(public_id=data["public_id"]).first()
         except:
             return jsonify({"message": "Invalid Authentication Token!"}), 401
 

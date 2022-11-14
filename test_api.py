@@ -4,8 +4,10 @@ Test functions to ensure functionality of WWU-Wash-And-Dry-Backend's API endpoin
 
 # pylint: disable = E1101, W0613
 
+import datetime
 import time
 import json
+import jwt
 import pytest
 from init import configure_app
 from models.machine import Machine
@@ -18,7 +20,7 @@ app = configure_app(app)
 # Test Parameters for User
 USER_TEST_ID = 1
 USER_TEST_NAME = "Hayden"
-USER_TEST_PUBLIC_ID = "1"
+USER_TEST_PUBLIC_ID = "10101"
 USER_TEST_EMAIL = "Walla Walla"
 
 # Test Parameters for Machine
@@ -38,6 +40,8 @@ BODY = "Testing email"
 SUBJECT = "Testing"
 
 # This pytest fixture allows us to update database within our test file.
+
+
 @pytest.fixture(name="app_context")
 def fixture_app_context():
     """
@@ -72,7 +76,8 @@ def test_get_user(app_context):
     db.session.add(new_user)
     db.session.commit()
     # send request
-    response = app.test_client().get(f"/user/{USER_TEST_PUBLIC_ID}")
+    response = app.test_client().get(f"/user/{USER_TEST_PUBLIC_ID}",
+    headers={"access_token": get_mock_token()})
     # remove created user
     User.query.filter_by(public_id=USER_TEST_PUBLIC_ID).delete()
     db.session.commit()
@@ -96,7 +101,8 @@ def test_delete_user(app_context):
     new_user = User(USER_TEST_PUBLIC_ID, USER_TEST_NAME, USER_TEST_EMAIL)
     db.session.add(new_user)
     db.session.commit()
-    response = app.test_client().delete(f"/user/{USER_TEST_PUBLIC_ID}")
+    response = app.test_client().delete(f"/user/{USER_TEST_PUBLIC_ID}",
+    headers={"access_token": get_mock_token()})
     assert response.status_code == 200
     assert (
         json.loads(response.data)
@@ -123,7 +129,8 @@ def test_get_machine_by_id(app_context):
     )
     db.session.add(new_machine)
     db.session.commit()
-    response = app.test_client().get(f"/machine/{MACHINE_TEST_PUBLIC_ID}")
+    response = app.test_client().get(f"/machine/{MACHINE_TEST_PUBLIC_ID}",
+    headers={"access_token": get_mock_token()})
     Machine.query.filter_by(public_id=MACHINE_TEST_PUBLIC_ID).delete()
     db.session.commit()
     assert response.status_code == 200
@@ -161,7 +168,8 @@ def test_delete_machine_by_id(app_context):
     )
     db.session.add(new_machine)
     db.session.commit()
-    response = app.test_client().delete(f"/machine/{MACHINE_TEST_PUBLIC_ID}")
+    response = app.test_client().delete(f"/machine/{MACHINE_TEST_PUBLIC_ID}",
+                                        headers={"access_token": get_mock_token()})
     Machine.query.filter_by(public_id=MACHINE_TEST_PUBLIC_ID).delete()
     assert response.status_code == 200
     assert (
@@ -188,7 +196,7 @@ def test_create_machine_by_id(app_context):
             "finish_time": MACHINE_TEST_FINISH_TIME,
             "user_name": MACHINE_TEST_USER_NAME,
         },
-    )
+        headers={"access_token": get_mock_token()})
     Machine.query.filter_by(public_id=MACHINE_TEST_PUBLIC_ID).delete()
     db.session.commit()
     assert response.status_code == 200
@@ -219,7 +227,8 @@ def test_get_machine_by_dorm_floor_floor_id(app_context):
     db.session.add(new_machine)
     db.session.commit()
     response = app.test_client().get(
-        f"/machine/{MACHINE_TEST_DORM}/{MACHINE_TEST_FLOOR}/{MACHINE_TEST_FLOOR_ID}"
+        f"/machine/{MACHINE_TEST_DORM}/{MACHINE_TEST_FLOOR}/{MACHINE_TEST_FLOOR_ID}",
+        headers={"access_token": get_mock_token()}
     )
     Machine.query.filter_by(public_id=MACHINE_TEST_PUBLIC_ID).delete()
     db.session.commit()
@@ -273,7 +282,8 @@ def test_get_machines_by_dorm_floor(app_context):
     db.session.add(new_machine2)
     db.session.commit()
     response = app.test_client().get(
-        f"/machine/{MACHINE_TEST_DORM}/{MACHINE_TEST_FLOOR}"
+        f"/machine/{MACHINE_TEST_DORM}/{MACHINE_TEST_FLOOR}",
+        headers={"access_token": get_mock_token()}
     )
     Machine.query.filter_by(public_id=test_public_id[0]).delete()
     Machine.query.filter_by(public_id=test_public_id[1]).delete()
@@ -333,7 +343,8 @@ def test_get_machines_by_dorm(app_context):
     db.session.add(new_machine1)
     db.session.add(new_machine2)
     db.session.commit()
-    response = app.test_client().get(f"/machine/{MACHINE_TEST_DORM}")
+    response = app.test_client().get(f"/machine/{MACHINE_TEST_DORM}",
+    headers={"access_token": get_mock_token()})
     Machine.query.filter_by(public_id=test_public_id[0]).delete()
     Machine.query.filter_by(public_id=test_public_id[1]).delete()
     Machine.query.filter_by(public_id=test_public_id[2]).delete()
@@ -345,6 +356,7 @@ def test_get_machines_by_dorm(app_context):
         {"Public_ID": 3, "Floor": 3, "Floor_ID": 3, "Status": "free"},
     ]
 
+
 def test_email_failure(app_context):
     """
     This method tests a failed send_email function call
@@ -355,8 +367,7 @@ def test_email_failure(app_context):
     assert response.status_code == 400
 
 
-
-#test_email_success is implicitly used in this test, no need for separate test
+# test_email_success is implicitly used in this test, no need for separate test
 def test_send_notifications(app_context):
     """
     This function tests a successful send notification call
@@ -391,3 +402,19 @@ def test_send_notifications(app_context):
     assert test_machine.status == "pick_up_laundry"
     assert test_machine.finish_time is None
     assert test_machine.user_name is None
+
+
+def get_mock_token():
+    """
+    Will return a temporary JWT token for authenticated test api calls
+
+    Returns: Token (String)
+    """
+    return jwt.encode(
+        {
+            "public_id": USER_TEST_PUBLIC_ID,
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=5),
+        },
+        app.config["SECRET_KEY"],
+        "HS256",
+    )
