@@ -11,7 +11,7 @@ from routes.token import token_required
 
 user = Blueprint('user', __name__)
 
-@user.route("/user/<requested_user_id>", methods=["GET", "DELETE"])
+@user.route("/user/<requested_user_id>", methods=["GET", "DELETE", "PUT"])
 @token_required
 def user_by_id(current_user, requested_user_id):
     """
@@ -32,6 +32,7 @@ def user_by_id(current_user, requested_user_id):
                 "Name": user_info.name,
                 "Public_ID": user_info.public_id,
                 "Email": user_info.email,
+                "Favorite_Machine": user_info.favorite_machine,
             }
         )
     if request.method == "DELETE":
@@ -45,5 +46,25 @@ def user_by_id(current_user, requested_user_id):
                 f"deleted information for user with ID: {requested_user_id}"
             )
         abort(404)
+    #TO-DO implement tests for this endpoint
+    if request.method == "PUT":
+        #Gather request arguments
+        favorite_machine = request.args.get("favorite_machine")
+        #Find User to update
+        user_to_update = User.query.filter_by(public_id=requested_user_id).first_or_404()
+        #Update the Change
+        if favorite_machine != "None" and favorite_machine is not None:
+            user_to_update.favorite_machine = int(favorite_machine)
+        #Commit Changes
+        db.session.commit()
+        #Return Changes
+        return jsonify(
+            {
+                "Name": user_to_update.name,
+                "Public_ID": user_to_update.public_id,
+                "Email": user_to_update.email,
+                "Favorite_Machine": user_to_update.favorite_machine,
+            }
+        )
     abort(400)
     return jsonify("There was an error")

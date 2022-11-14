@@ -16,9 +16,11 @@ class User(db.Model):
     public_id = db.Column(db.String(50), unique=True)
     name = db.Column(db.String(100))
     email = db.Column(db.String(70), unique=True)
+    favorite_machine = db.Column(db.Integer)
 
     #pylint: disable=C0103, W0622
     def __init__(self, public_id, name, email):
         self.public_id = public_id
         self.name = name
         self.email = email
+        self.favorite_machine = 0
