@@ -8,7 +8,7 @@ Currently creates:
 1 Machine on each floor for Conard Floors 2-4
 """
 import requests
-
+#pylint: disable=W3101
 def create_machine(public_id,floor,floor_id,dorm):
     """
     Function to call Post machine endpoints
