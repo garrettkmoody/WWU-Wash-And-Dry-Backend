@@ -1,6 +1,7 @@
 flask
 flask_sqlalchemy
 flask-mail
+flask_migrate
 python-dotenv
 pyjwt
 requests
