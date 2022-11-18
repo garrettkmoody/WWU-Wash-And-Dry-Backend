@@ -146,6 +146,7 @@ def machine_by_id(current_user, requested_id):
         )
     # If no method works, return 400 error
     abort(400)
+    return jsonify(404)
 
 
 @machine.route(
