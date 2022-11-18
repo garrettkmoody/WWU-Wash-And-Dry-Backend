@@ -379,7 +379,7 @@ def test_failed_delete_machine_by_id(app_context):
     assert response.status_code == 404
 
 
-# ---------------------------GET MACHINE BY DORM FLOOR FLOOR ID--------------------------------------
+# --------------------------GET MACHINE BY DORM FLOOR FLOOR ID--------------------------------------
 
 
 def test_successful_get_machine_by_dorm_floor_floor_id(app_context):

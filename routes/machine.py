@@ -25,7 +25,7 @@ def machine_by_id(current_user, requested_id):
              Deletes: A confirmation message that the machine has been deleted
              Get: The machine's information
     """
-    # Pylint: disable=R0914
+    # pylint: disable=R0914
     dorm_list = ["Sittner", "Conard", "Foreman"]
     status_list = ["Free", "In_use", "Broken"]
     if request.args:
@@ -36,8 +36,6 @@ def machine_by_id(current_user, requested_id):
         status = request.args.get("Status")
         last_service_date = request.args.get("Last_service_date")
         installation_date = request.args.get("Installation_date")
-        if current_user is not None:
-            user_name = current_user.name
         # Checking Parameter Arguments
         if int(floor_id) < 0 | int(floor_id) > 100:
             abort(400)
@@ -50,7 +48,7 @@ def machine_by_id(current_user, requested_id):
         try:
             datetime.datetime.strptime(installation_date, "%m-%d-%Y")
             datetime.datetime.strptime(last_service_date, "%m-%d-%Y")
-        except:
+        except ValueError:
             abort(400)
         # Parameter Arguments are valid, attempt to create user
     if request.method == "POST":
@@ -208,6 +206,7 @@ def machine_by_dorm_floor_floor_id(
             }
         )
     abort(400)
+    return jsonify(404)
 
 
 @machine.route(
