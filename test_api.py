@@ -22,6 +22,8 @@ USER_TEST_ID = 1
 USER_TEST_NAME = "Hayden"
 USER_TEST_PUBLIC_ID = "10101"
 USER_TEST_EMAIL = "Walla Walla"
+USER_TEST_FLOOR = 2
+USER_TEST_DORM = "Foreman"
 
 # Test Parameters for Machine
 MACHINE_TEST_PUBLIC_ID = 1
@@ -63,6 +65,8 @@ def test_unprotected_route():
     assert response.status_code == 200
     assert json.loads(response.data) == "No Token No problem!"
 
+# ---------------------------GET USER BY ID--------------------------------------
+
 
 def test_get_user(app_context):
     """
@@ -78,9 +82,6 @@ def test_get_user(app_context):
     response = app.test_client().get(
         f"/user/{USER_TEST_PUBLIC_ID}", headers={"access_token": get_mock_token()}
     )
-    # remove created user
-    User.query.filter_by(public_id=USER_TEST_PUBLIC_ID).delete()
-    db.session.commit()
     # test response
     assert response.status_code == 200
     assert json.loads(response.data) == (
@@ -88,8 +89,37 @@ def test_get_user(app_context):
             "Name": USER_TEST_NAME,
             "Public_ID": USER_TEST_PUBLIC_ID,
             "Email": USER_TEST_EMAIL,
+            "Dorm": None,
+            "Floor": None
         }
     )
+
+
+# ---------------------------UPDATE USER BY ID--------------------------------------
+
+
+def test_update_user(app_context):
+    """
+    This method tests a successful /putUser/{USER_TEST_PUBLIC_ID} API call
+    Input Arguments: app_context
+    Returns: Void
+    """
+
+    response = app.test_client().put(f"/user/{USER_TEST_PUBLIC_ID}", query_string={
+        "Floor": USER_TEST_FLOOR, "Dorm": USER_TEST_DORM},
+        headers={"access_token": get_mock_token()})
+    assert response.status_code == 200
+    assert json.loads(response.data) == (
+        {
+            "Name": USER_TEST_NAME,
+            "Public_ID": USER_TEST_PUBLIC_ID,
+            "Email": USER_TEST_EMAIL,
+            "Dorm": USER_TEST_DORM,
+            "Floor": USER_TEST_FLOOR,
+        }
+    )
+
+# ---------------------------DELETE USER BY ID--------------------------------------
 
 
 def test_delete_user(app_context):
@@ -98,9 +128,6 @@ def test_delete_user(app_context):
     Input Arguments: app_context
     Returns: Void
     """
-    new_user = User(USER_TEST_PUBLIC_ID, USER_TEST_NAME, USER_TEST_EMAIL)
-    db.session.add(new_user)
-    db.session.commit()
     response = app.test_client().delete(
         f"/user/{USER_TEST_PUBLIC_ID}", headers={"access_token": get_mock_token()}
     )
@@ -109,7 +136,6 @@ def test_delete_user(app_context):
         json.loads(response.data)
         == f"deleted information for user with ID: {USER_TEST_PUBLIC_ID}"
     )
-
 
 # ---------------------------CREATE MACHINE BY ID--------------------------------------
 
@@ -613,7 +639,8 @@ def test_send_notifications(app_context):
     Input Arguments: app_context
     Returns: Void
     """
-    new_user = User(USER_TEST_PUBLIC_ID, "Taylor", "WWU-Wash-And-Dry@outlook.com")
+    new_user = User(USER_TEST_PUBLIC_ID, "Taylor",
+                    "WWU-Wash-And-Dry@outlook.com")
     db.session.add(new_user)
     new_machine = Machine(
         MACHINE_TEST_PUBLIC_ID,
