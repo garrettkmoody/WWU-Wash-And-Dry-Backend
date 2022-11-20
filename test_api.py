@@ -292,8 +292,7 @@ def test_successful_put_machine_by_id_1(app_context):
             "Status": "In_use",
             "Last_service_date": MACHINE_TEST_LAST_SERVICE_DATE,
             "Installation_date": MACHINE_TEST_INSTALLATION_DATE,
-            "Dorm": MACHINE_TEST_DORM,
-            "Finish_time": 0,
+            "Dorm": MACHINE_TEST_DORM
         },
         headers={"access_token": get_mock_token()},
     )
@@ -307,7 +306,7 @@ def test_successful_put_machine_by_id_1(app_context):
             "Status": "In_use",
             "Last_Service_Date": "10-27-2022",
             "Installation_Date": "10-27-2022",
-            "Finish_Time": 0,
+            "Finish_Time": (int(time.time())+30),
             "User_Name": "None",
         }
     )
@@ -343,7 +342,7 @@ def test_successful_put_machine_by_id_2(app_context):
             "Last_Service_Date": "10-27-2022",
             "Installation_Date": "10-27-2022",
             "User_Name": "None",
-            "Finish_Time": 0,
+            "Finish_Time": (int(time.time())+30),
         }
     )
 
@@ -647,10 +646,10 @@ def test_send_notifications(app_context):
         MACHINE_TEST_FLOOR_ID,
         MACHINE_TEST_DORM,
         MACHINE_TEST_FLOOR,
-        "in_use",
+        "In_use",
         MACHINE_TEST_LAST_SERVICE_DATE,
         MACHINE_TEST_INSTALLATION_DATE,
-        int((time.time_ns() / 60000000000)),
+        int(time.time()),
         "Taylor",
     )
     db.session.add(new_machine)
@@ -663,7 +662,7 @@ def test_send_notifications(app_context):
     Machine.query.filter_by(public_id=USER_TEST_PUBLIC_ID).delete()
     Machine.query.filter_by(public_id=MACHINE_TEST_PUBLIC_ID).delete()
     db.session.commit()
-    assert test_machine.status == "pick_up_laundry"
+    assert test_machine.status == "Free"
     assert test_machine.finish_time is None
     assert test_machine.user_name is None
 

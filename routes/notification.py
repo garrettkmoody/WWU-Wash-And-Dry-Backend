@@ -51,11 +51,11 @@ def send_notifications():
     Input Arguments: None
     Returns: Void
     """
-    current_time = int(time.time_ns()/60000000000)
+    current_time = int(time.time())
     finished_machines = Machine.query.filter_by(finish_time = current_time).all()
     counter = 0
     while counter < len(finished_machines):
-        finished_machines[counter].status = "pick_up_laundry"
+        finished_machines[counter].status = "Free"
         finished_machines[counter].finish_time = None
         user = User.query.filter_by(name = finished_machines[counter].user_name).first_or_404()
         send_email(MSG_SUBJECT, MSG_BODY, [user.email])
