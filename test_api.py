@@ -713,8 +713,8 @@ def test_404_error(app_context):
     """
     response = app.test_client().get("/test404")
     assert response.status_code == 404
-    assert json.loads(response.data == {
-            'error': '404 Not Found: Page Not Found'})
+    assert json.loads(response.data) == {
+            'error': '404 Not Found: Page Not Found'}
 
 
 def test_429_error(app_context):
