@@ -16,9 +16,13 @@ class User(db.Model):
     public_id = db.Column(db.String(50), unique=True)
     name = db.Column(db.String(100))
     email = db.Column(db.String(70), unique=True)
+    dorm = db.Column(db.String(10))
+    floor = db.Column(db.Integer)
 
     #pylint: disable=C0103, W0622
     def __init__(self, public_id, name, email):
         self.public_id = public_id
         self.name = name
         self.email = email
+        self.dorm = None
+        self.floor = None

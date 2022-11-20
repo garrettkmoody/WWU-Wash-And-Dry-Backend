@@ -22,6 +22,8 @@ USER_TEST_ID = 1
 USER_TEST_NAME = "Hayden"
 USER_TEST_PUBLIC_ID = "10101"
 USER_TEST_EMAIL = "Walla Walla"
+USER_TEST_FLOOR = 2
+USER_TEST_DORM = "Foreman"
 
 # Test Parameters for Machine
 MACHINE_TEST_PUBLIC_ID = 1
@@ -63,6 +65,8 @@ def test_unprotected_route():
     assert response.status_code == 200
     assert json.loads(response.data) == "No Token No problem!"
 
+# ---------------------------GET USER BY ID--------------------------------------
+
 
 def test_get_user(app_context):
     """
@@ -78,9 +82,6 @@ def test_get_user(app_context):
     response = app.test_client().get(
         f"/user/{USER_TEST_PUBLIC_ID}", headers={"access_token": get_mock_token()}
     )
-    # remove created user
-    User.query.filter_by(public_id=USER_TEST_PUBLIC_ID).delete()
-    db.session.commit()
     # test response
     assert response.status_code == 200
     assert json.loads(response.data) == (
@@ -88,8 +89,37 @@ def test_get_user(app_context):
             "Name": USER_TEST_NAME,
             "Public_ID": USER_TEST_PUBLIC_ID,
             "Email": USER_TEST_EMAIL,
+            "Dorm": None,
+            "Floor": None
         }
     )
+
+
+# ---------------------------UPDATE USER BY ID--------------------------------------
+
+
+def test_update_user(app_context):
+    """
+    This method tests a successful /putUser/{USER_TEST_PUBLIC_ID} API call
+    Input Arguments: app_context
+    Returns: Void
+    """
+
+    response = app.test_client().put(f"/user/{USER_TEST_PUBLIC_ID}", query_string={
+        "Floor": USER_TEST_FLOOR, "Dorm": USER_TEST_DORM},
+        headers={"access_token": get_mock_token()})
+    assert response.status_code == 200
+    assert json.loads(response.data) == (
+        {
+            "Name": USER_TEST_NAME,
+            "Public_ID": USER_TEST_PUBLIC_ID,
+            "Email": USER_TEST_EMAIL,
+            "Dorm": USER_TEST_DORM,
+            "Floor": USER_TEST_FLOOR,
+        }
+    )
+
+# ---------------------------DELETE USER BY ID--------------------------------------
 
 
 def test_delete_user(app_context):
@@ -98,9 +128,6 @@ def test_delete_user(app_context):
     Input Arguments: app_context
     Returns: Void
     """
-    new_user = User(USER_TEST_PUBLIC_ID, USER_TEST_NAME, USER_TEST_EMAIL)
-    db.session.add(new_user)
-    db.session.commit()
     response = app.test_client().delete(
         f"/user/{USER_TEST_PUBLIC_ID}", headers={"access_token": get_mock_token()}
     )
@@ -109,7 +136,6 @@ def test_delete_user(app_context):
         json.loads(response.data)
         == f"deleted information for user with ID: {USER_TEST_PUBLIC_ID}"
     )
-
 
 # ---------------------------CREATE MACHINE BY ID--------------------------------------
 
@@ -266,8 +292,7 @@ def test_successful_put_machine_by_id_1(app_context):
             "Status": "In_use",
             "Last_service_date": MACHINE_TEST_LAST_SERVICE_DATE,
             "Installation_date": MACHINE_TEST_INSTALLATION_DATE,
-            "Dorm": MACHINE_TEST_DORM,
-            "Finish_time": 0,
+            "Dorm": MACHINE_TEST_DORM
         },
         headers={"access_token": get_mock_token()},
     )
@@ -281,7 +306,7 @@ def test_successful_put_machine_by_id_1(app_context):
             "Status": "In_use",
             "Last_Service_Date": "10-27-2022",
             "Installation_Date": "10-27-2022",
-            "Finish_Time": 0,
+            "Finish_Time": (int(time.time())+30),
             "User_Name": "None",
         }
     )
@@ -317,7 +342,7 @@ def test_successful_put_machine_by_id_2(app_context):
             "Last_Service_Date": "10-27-2022",
             "Installation_Date": "10-27-2022",
             "User_Name": "None",
-            "Finish_Time": 0,
+            "Finish_Time": (int(time.time())+30),
         }
     )
 
@@ -613,17 +638,18 @@ def test_send_notifications(app_context):
     Input Arguments: app_context
     Returns: Void
     """
-    new_user = User(USER_TEST_PUBLIC_ID, "Taylor", "WWU-Wash-And-Dry@outlook.com")
+    new_user = User(USER_TEST_PUBLIC_ID, "Taylor",
+                    "WWU-Wash-And-Dry@outlook.com")
     db.session.add(new_user)
     new_machine = Machine(
         MACHINE_TEST_PUBLIC_ID,
         MACHINE_TEST_FLOOR_ID,
         MACHINE_TEST_DORM,
         MACHINE_TEST_FLOOR,
-        "in_use",
+        "In_use",
         MACHINE_TEST_LAST_SERVICE_DATE,
         MACHINE_TEST_INSTALLATION_DATE,
-        int((time.time_ns() / 60000000000)),
+        int(time.time()),
         "Taylor",
     )
     db.session.add(new_machine)
@@ -636,9 +662,121 @@ def test_send_notifications(app_context):
     Machine.query.filter_by(public_id=USER_TEST_PUBLIC_ID).delete()
     Machine.query.filter_by(public_id=MACHINE_TEST_PUBLIC_ID).delete()
     db.session.commit()
-    assert test_machine.status == "pick_up_laundry"
+    assert test_machine.status == "Free"
     assert test_machine.finish_time is None
     assert test_machine.user_name is None
+
+# ---------------------------ERROR HANDLER TESTS --------------------------------------
+
+
+def test_400_error(app_context):
+    """
+    This function is to test the bad request error
+    Inputs: None
+    Returns: Void
+    """
+    response = app.test_client().get("/test400")
+    assert response.status_code == 400
+    assert (json.loads(response.data) == {
+            'error': '400 Bad Request: Bad Request'})
+
+
+def test_401_error(app_context):
+    """
+    This function is to test the bad request error
+    Inputs: None
+    Returns: Void
+    """
+    response = app.test_client().get("/test401")
+    assert response.status_code == 401
+    assert (json.loads(response.data) == {
+            'error': '401 Unauthorized: Unauthorized User'})
+
+
+def test_403_error(app_context):
+    """
+    This function is to test the bad request error
+    Inputs: None
+    Returns: Void
+    """
+    response = app.test_client().get("/test403")
+    assert response.status_code == 403
+    assert (json.loads(response.data) == {
+            'error': '403 Forbidden: Forbidden API Call'})
+
+
+def test_404_error(app_context):
+    """
+    This function is to test the bad request error
+    Inputs: None
+    Returns: Void
+    """
+    response = app.test_client().get("/test404")
+    assert response.status_code == 404
+    assert json.loads(response.data) == {
+            'error': '404 Not Found: Page Not Found'}
+
+
+def test_429_error(app_context):
+    """
+    This function is to test the bad request error
+    Inputs: None
+    Returns: Void
+    """
+    response = app.test_client().get("/test429")
+    assert response.status_code == 429
+    assert (json.loads(response.data) == {
+            'error': '429 Too Many Requests: Too Many Requests'})
+
+
+def test_500_error(app_context):
+    """
+    This function is to test the bad request error
+    Inputs: None
+    Returns: Void
+    """
+    response = app.test_client().get("/test500")
+    assert response.status_code == 500
+    assert (json.loads(response.data) == {
+            'error': '500 Internal Server Error: Internal Server Error'})
+
+
+def test_502_error(app_context):
+    """
+    This function is to test the bad request error
+    Inputs: None
+    Returns: Void
+    """
+    response = app.test_client().get("/test502")
+    assert response.status_code == 502
+    assert (json.loads(response.data) == {
+            'error': '502 Bad Gateway: Bad Gateway'})
+
+
+def test_503_error(app_context):
+    """
+    This function is to test the bad request error
+    Inputs: None
+    Returns: Void
+    """
+    response = app.test_client().get("/test503")
+    assert response.status_code == 503
+    assert (json.loads(response.data) == {
+            'error': '503 Service Unavailable: Service Unavailable'})
+
+
+def test_504_error(app_context):
+    """
+    This function is to test the bad request error
+    Inputs: None
+    Returns: Void
+    """
+    response = app.test_client().get("/test504")
+    assert response.status_code == 504
+    assert (json.loads(response.data) == {
+            'error': '504 Gateway Timeout: Gateway Timed Out'})
+
+# ---------------------------MOCK TOKEN FOR API CALLS --------------------------------------
 
 
 def get_mock_token():

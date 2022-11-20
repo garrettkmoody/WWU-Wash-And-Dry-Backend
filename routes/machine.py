@@ -102,9 +102,6 @@ def machine_by_id(current_user, requested_id):
             return jsonify(f"Deleted information for machine with ID: {requested_id}")
         abort(404)
     if request.method == "PUT":
-        # Gather request arguments
-        # Edit Later
-        finish_time = request.args.get("finish_time")
         # Find machine to update
         machine_to_update = Machine.query.filter_by(
             public_id=requested_id
@@ -118,14 +115,12 @@ def machine_by_id(current_user, requested_id):
             machine_to_update.floor = int(floor)
         if status != "None" and status is not None:
             machine_to_update.status = str(status)
+            if status == "In_use":
+                machine_to_update.finish_time = int(time.time()) + 30 #Machine is finished 30 minutes after start
         if installation_date != "None" and installation_date is not None:
             machine_to_update.installation_date = str(installation_date)
         if last_service_date != "None" and last_service_date is not None:
             machine_to_update.last_service_date = str(last_service_date)
-        # TO-DO: implement that a finish time can not be update without a username
-        # And vice versa
-        if finish_time != "None" and finish_time is not None:
-            machine_to_update.finish_time = int(finish_time)
         if current_user is not None:
             machine_to_update.user_name = str(current_user.name)
         # Commit Changes
