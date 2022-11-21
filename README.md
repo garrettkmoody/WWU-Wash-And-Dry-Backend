@@ -1,10 +1,53 @@
 # WWU-Wash-And-Dry-Backend
 
-Python Flask Application to serve as the backend for WWU Wash and Dry
+A Python Flask Application based on simple REST principles, the WWU Wash and Dry API endpoints return JSON metadata about WWU washing and drying machines.
 
-## Setup
+This Web API also provides access to user related data, like user name, email, and floor and dorm preferences.
 
-- Install...
+The API provides a set of endpoints, each with its own unique path. To access private data through the Web API, such as user information and washing/drying machine data.
+
+## Endpoints
+
+Refer to the endpoints documentation in the docs folder for more information on specific endpoint parameters and returns.
+
+
+## Setup and Installation
+
+In order to setup the WWU Wash and Dry API you must have Python 3.11.0 installed as well as GIT.
+
+Clone in the WWU Wash and Dry Web API into your repository using:
+
+```sh
+git clone https://github.com/garrettkmoody/WWU-Wash-And-Dry-Backend.git
+```
+
+In your local repository, open a terminal and install the needed requirements using:
+
+```sh
+pip install -r requirements.txt
+```
+
+### Hosting the API Locally
+
+To run the API from your local machine, open the repository in a terminal and use the command:
+
+```sh
+python init.py
+```
+
+### Testing the Web API
+
+To test the API, open the repository in a terminal and use the command:
+
+```sh
+pytest
+```
+
+To ensure that any changes in a file meets the required style guides, use the command:
+
+```sh
+pylint "/path/to/file"
+```
 
 ## Developer Notes
 
