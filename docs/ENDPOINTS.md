@@ -5,12 +5,12 @@ calls will not work.
 
 - Public_id: The machine's ID. No machine will have the same Public_id as another.
 - Floor_id: Machine ID for the machines on a single floor. Different ID than Public_id. Each floor will have a machine with Floor_ID 1 for example.
-- Floor: Floor number that the machine is located on. Note Sittner machines are under floor 1 in our database.
-- Dorm: Dorm that the machines belong to. Can be either "Sittner", "Foreman", or "Conard".
+- Floor (Machine): Floor number that the machine is located on. Note Sittner machines are under floor 1 in our database.
+- Floor (User): Floor number that is one of the user's preferences. Note Sittner machines are under floor 1 in our database.
+- Dorm (User): Dorm name that is one of the user's preferences. Can be either "Sittner", "Foreman", or "Conard".
+- Dorm (Machine): Dorm that the machines belong to. Can be either "Sittner", "Foreman", or "Conard".
 - Last_service_date: Date the machine was last serviced on. Date must follow this format 10-10-2002
 - Installation_date: Date the machine was installed. Date must follow this format 10-10-2002
-- User_name: Name of the user that is using the machine.
-- Finish Time: Time until the machine is finished.
 - Status: Status of the machine. Can either be "Free", "In_use", or "Broken".
 
 # Available Endpoints
@@ -131,8 +131,6 @@ These are parameters are optional
 - Status
 - Last_service_date
 - Installation_date
-- Finish_time
-- User_name
 
 > **Sample URL For Request**
 
@@ -198,18 +196,11 @@ These are parameters are optional
 
 These parameters are optional
 
-- Floor_id
-- Dorm
-- Floor
 - Status
-- Last_service_date
-- Installation_date
-- Finish_time
-- User_name
 
 > **Sample URL For Request**
 
-- http://localhost:5000/machine/Sittner/1/1?Floor_id=2&Floor=1&Dorm=Foreman&Status=Free&Last_service_date=01-20-2001&Installation_date=01-10-2001
+- http://localhost:5000/machine/Sittner/1/1?Status=Free
 
 > **RESPONSE**
 
@@ -332,7 +323,8 @@ These parameters are optional
 
 > **PARAMETERS**
 
-- None
+- Floor
+- Dorm
 
 > **Sample URL For Request**
 
