@@ -3,6 +3,7 @@ This file holds the User Model
 """
 
 #pylint: disable = R0903
+#R0903: Too few public methods (0/2) (too-few-public-methods)
 
 from extensions import db
 
@@ -19,7 +20,6 @@ class User(db.Model):
     dorm = db.Column(db.String(10))
     floor = db.Column(db.Integer)
 
-    #pylint: disable=C0103, W0622
     def __init__(self, public_id, name, email):
         self.public_id = public_id
         self.name = name

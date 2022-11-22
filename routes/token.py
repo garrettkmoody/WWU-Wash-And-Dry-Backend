@@ -2,7 +2,8 @@
 This file holds the API routes for access tokens
 """
 
-#pylint: disable = W0621, W0702
+#pylint: disable = W0702
+#W0702: No exception type(s) specified (bare-except)
 
 from functools import wraps
 from flask import Blueprint, jsonify, request
@@ -10,7 +11,7 @@ import jwt
 from extensions import app
 from models.user import User
 
-token = Blueprint('token', __name__)
+tokens = Blueprint('token', __name__)
 
 def token_required(function_decorator):
     """
@@ -35,7 +36,7 @@ def token_required(function_decorator):
     return decorator
 
 # Unprotected route, no token required
-@token.route("/unprotected")
+@tokens.route("/unprotected")
 def unprotected():
     """
     Unprotected endpoint
@@ -45,7 +46,7 @@ def unprotected():
 
 
 # Protected route, token required
-@token.route("/protected")
+@tokens.route("/protected")
 @token_required
 def protected(current_user):
     """

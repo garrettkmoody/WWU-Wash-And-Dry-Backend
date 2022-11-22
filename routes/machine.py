@@ -2,8 +2,12 @@
 This file holds the API routes for post, get, delete, and put machines
 """
 
+#pylint: disable = E1101, R0912, R0915, W0613
+#E1101: Instance of '' has no '' member (no-member)
+#R0912: Too many branches (23/12) (too-many-branches)
+#R0915: Too many statements (63/50) (too-many-statements)
+#W0613: Unused argument 'current_user' (unused-argument)
 
-# pylint: disable = C0301, E1101, R0911, R0912, R0915, W0613
 import datetime
 import time
 from flask import Blueprint, request, jsonify, abort
@@ -13,135 +17,138 @@ from routes.token import token_required
 
 machine = Blueprint("machine", __name__)
 
+DORM_LIST = ["Sittner", "Conard", "Foreman"]
+STATUS_LIST = ["Free", "In_use", "Broken"]
+TIMER = 30
 
-# TO-DO Implement tests for PUT and failed requests
+
 @machine.route("/machine/<int:requested_id>", methods=["GET", "DELETE", "POST", "PUT"])
 @token_required
 def machine_by_id(current_user, requested_id):
     """
-    Endpoint for getting/posting/deleting a machine by its ID
+    Endpoint for getting/posting/deleting/putting a machine by its ID
     Parameter: ID for the machine
-    Returns: Post: A confirmation message if it works
-             Deletes: A confirmation message that the machine has been deleted
-             Get: The machine's information
+    Returns: POST: A confirmation message if it works
+             DELETE: A confirmation message that the machine has been deleted
+             GET: The machine's information
+             PUT: The machine's updated information
     """
-    # pylint: disable=R0914
-    dorm_list = ["Sittner", "Conard", "Foreman"]
-    status_list = ["Free", "In_use", "Broken"]
+    #Accepting General Use Parameter Arguments
     if request.args:
         # Accepting Parameter Arguments
-        floor_id = request.args.get("Floor_id")
+        floor_id = int(request.args.get("Floor_id"))
         dorm = request.args.get("Dorm")
-        floor = request.args.get("Floor")
-        status = request.args.get("Status")
-        last_service_date = request.args.get("Last_service_date")
+        floor = int(request.args.get("Floor"))
         installation_date = request.args.get("Installation_date")
         # Checking Parameter Arguments
-        if int(floor_id) < 0 | int(floor_id) > 100:
-            abort(400)
-        if dorm not in dorm_list:
-            abort(400)
-        if int(floor) < 0 | int(floor) > 10:
-            abort(400)
-        if status not in status_list:
-            abort(400)
+        if floor_id < 0 | floor_id > 100:
+            abort(400, "Floor_id is out of range of the acceptable ids")
+        if dorm not in DORM_LIST:
+            abort(400, "Dorm is not recognized as a valid dorm")
+        if floor < 0 | floor > 10:
+            abort(400, "Floor is out of range of the acceptable levels")
         try:
             datetime.datetime.strptime(installation_date, "%m-%d-%Y")
-            datetime.datetime.strptime(last_service_date, "%m-%d-%Y")
         except ValueError:
-            abort(400)
+            abort(400, "Installation date is not formatted properly, use: %m-%d-%Y")
         # Parameter Arguments are valid, attempt to create user
     if request.method == "POST":
         try:
             new_machine = Machine(
                 int(requested_id),
-                int(floor_id),
-                str(dorm),
-                int(floor),
-                str(status),
-                str(last_service_date),
-                str(installation_date),
-                0,
-                "None",
+                floor_id,
+                dorm,
+                floor,
+                installation_date,
             )
             db.session.add(new_machine)
             db.session.commit()
             return (
                 jsonify(
-                    "Created information for machine with ID: " + str(requested_id)
-                ),
-                200,
+                    f"Created information for machine with ID: {requested_id}"
+                ), 200
             )
         except db.IntegrityError:
-            return (
-                jsonify("Machine " + str(requested_id) + " is already registered."),
-                500,
-            )
+            abort(500, f"Machine {requested_id} is already registered.")
     if request.method == "GET":
-        # Find the Machine
-        machine_info = Machine.query.filter_by(public_id=requested_id).first_or_404()
-        # Return as a json dictionary
-        return jsonify(
-            {
-                "Public_ID": machine_info.public_id,
-                "Floor_ID": machine_info.floor_id,
-                "Floor": machine_info.floor,
-                "Dorm": machine_info.dorm,
-                "Status": machine_info.status,
-                "Last_Service_Date": machine_info.last_service_date,
-                "Installation_Date": machine_info.installation_date,
-                "Finish_Time": machine_info.finish_time,
-                "User_Name": machine_info.user_name,
-            }
-        )
+        try:
+            # Find the Machine
+            machine_info = Machine.query.filter_by(public_id=requested_id).first()
+            # Return as a json dictionary
+            return jsonify(
+                {
+                    "Public_ID": machine_info.public_id,
+                    "Floor_ID": machine_info.floor_id,
+                    "Floor": machine_info.floor,
+                    "Dorm": machine_info.dorm,
+                    "Status": machine_info.status,
+                    "Last_Service_Date": machine_info.last_service_date,
+                    "Installation_Date": machine_info.installation_date,
+                    "Finish_Time": machine_info.finish_time,
+                    "User_Name": machine_info.user_name,
+                }
+            )
+        except AttributeError:
+            abort(404, f"Could not GET machine with ID: {requested_id}")
     if request.method == "DELETE":
         # Try to delete the machine, if not abort with a 404 error
         delete_request = Machine.query.filter_by(public_id=requested_id).delete()
         db.session.commit()
         if delete_request:
             return jsonify(f"Deleted information for machine with ID: {requested_id}")
-        abort(404)
+        abort(404, f"Machine not deleted, machine with the ID: {requested_id}, does not exist")
     if request.method == "PUT":
-        # Find machine to update
-        machine_to_update = Machine.query.filter_by(
-            public_id=requested_id
-        ).first_or_404()
-        # Update the changes
-        if floor_id != "None" and floor_id is not None:
-            machine_to_update.floor_id = int(floor_id)
-        if dorm != "None" and dorm is not None:
-            machine_to_update.dorm = str(dorm)
-        if floor != "None" and floor is not None:
-            machine_to_update.floor = int(floor)
-        if status != "None" and status is not None:
-            machine_to_update.status = str(status)
-            if status == "In_use":
-                machine_to_update.finish_time = int(time.time()) + 30 #Machine is finished 30 minutes after start
-        if installation_date != "None" and installation_date is not None:
-            machine_to_update.installation_date = str(installation_date)
-        if last_service_date != "None" and last_service_date is not None:
-            machine_to_update.last_service_date = str(last_service_date)
-        if current_user is not None:
-            machine_to_update.user_name = str(current_user.name)
-        # Commit Changes
-        db.session.commit()
-        # Returns Changes
-        return jsonify(
-            {
-                "Public_ID": machine_to_update.public_id,
-                "Floor_ID": machine_to_update.floor_id,
-                "Floor": machine_to_update.floor,
-                "Dorm": machine_to_update.dorm,
-                "Status": machine_to_update.status,
-                "Last_Service_Date": machine_to_update.last_service_date,
-                "Installation_Date": machine_to_update.installation_date,
-                "Finish_Time": machine_to_update.finish_time,
-                "User_Name": machine_to_update.user_name,
-            }
-        )
+        # Accept Parameters only used by PUT
+        status = request.args.get("Status")
+        last_service_date = request.args.get("Last_service_date")
+        if status not in STATUS_LIST:
+            abort(400, "Status is not an acceptable status, use: 'Free', 'In_use', 'Broken'")
+        try:
+            datetime.datetime.strptime(last_service_date, "%m-%d-%Y")
+        except ValueError:
+            abort(400, "Installation date is not formatted properly, use: %m-%d-%Y")
+        try:
+            # Find machine to update
+            machine_to_update = Machine.query.filter_by(
+                public_id=requested_id
+            ).first()
+            # Update the changes
+            if floor_id is not None:
+                machine_to_update.floor_id = floor_id
+            if dorm is not None:
+                machine_to_update.dorm = dorm
+            if floor is not None:
+                machine_to_update.floor = floor
+            if status is not None:
+                machine_to_update.status = status
+                if status == "In_use":
+                    machine_to_update.finish_time = int(time.time()) + TIMER
+            if installation_date is not None:
+                machine_to_update.installation_date = installation_date
+            if last_service_date is not None:
+                machine_to_update.last_service_date = last_service_date
+            if current_user is not None:
+                machine_to_update.user_name = str(current_user.name)
+            # Commit Changes
+            db.session.commit()
+            # Returns Changes
+            return jsonify(
+                {
+                    "Public_ID": machine_to_update.public_id,
+                    "Floor_ID": machine_to_update.floor_id,
+                    "Floor": machine_to_update.floor,
+                    "Dorm": machine_to_update.dorm,
+                    "Status": machine_to_update.status,
+                    "Last_Service_Date": machine_to_update.last_service_date,
+                    "Installation_Date": machine_to_update.installation_date,
+                    "Finish_Time": machine_to_update.finish_time,
+                    "User_Name": machine_to_update.user_name,
+                }
+            )
+        except AttributeError:
+            abort(404, f"Could not PUT machine with ID: {requested_id}")
     # If no method works, return 400 error
-    abort(400)
-    return jsonify(404)
+    return abort(400, "No method available to handle that call")
 
 
 @machine.route(
@@ -154,55 +161,56 @@ def machine_by_dorm_floor_floor_id(
 ):
     """
     Endpoint for getting machine by dorm, floor, and floorid
-    Paramters: Dorm, Floor number, and the floor id
-    Returns: A json object with information about the specific machine
+    Paramters: Dorm, floor number, and the floor id
+    Returns: GET: A json object with information about the specific machine
+             PUT: A json object with the updated information about the specific machine
     """
-    status_list = ["Free", "In_use", "Broken"]
     if request.method == "GET":
         # Get machine ID and Status and return it as a Json Dictionary
-        machine_info = Machine.query.filter_by(
-            floor_id=requested_floor_id, floor=requested_floor, dorm=requested_dorm
-        ).first_or_404()
-        return jsonify(
-            {
-                "Public_ID": machine_info.public_id,
-                "Status": machine_info.status,
-                "Finish_Time": machine_info.finish_time,
-                "User_Name": machine_info.user_name,
-            }
-        )
+        try:
+            machine_info = Machine.query.filter_by(
+                floor_id=requested_floor_id, floor=requested_floor, dorm=requested_dorm
+            ).first()
+            return jsonify(
+                {
+                    "Public_ID": machine_info.public_id,
+                    "Status": machine_info.status,
+                    "Finish_Time": machine_info.finish_time,
+                    "User_Name": machine_info.user_name,
+                }
+            )
+        except AttributeError:
+            abort(404, f"Could not GET machine with Floor_ID: {requested_floor_id}")
     if request.method == "PUT":
         # Updates machine status
         status = request.args.get("status")
-        if status not in status_list:
-            abort(400)
-        user_name = current_user.name
-        machine_info = Machine.query.filter_by(
-            floor_id=requested_floor_id, floor=requested_floor, dorm=requested_dorm
-        ).first_or_404()
-        machine_info.status = status
-        # If the status is in_use and a user is provided, then assigns a user and finish_time to the machine
-        if status == "in_use" and user_name is not None:
-            # Sets end time 30 minutes from current time
-            # TO-DO: Try to implement a time.time() method to improve readability
-            machine_info.finish_time = int(
-                (time.time_ns() + 1.8 * 10**12) / 60000000000
+        if status not in STATUS_LIST:
+            abort(400, "Status is not an acceptable status, use: 'Free', 'In_use', 'Broken'")
+        try:
+            machine_info = Machine.query.filter_by(
+                floor_id=requested_floor_id, floor=requested_floor, dorm=requested_dorm
+            ).first()
+            machine_info.status = status
+            # If the status is in_use and a user is provided,
+            # then assigns a user and finish_time to the machine
+            if status == "In_use" and current_user.name is not None:
+                machine_info.finish_time = int(time.time()) + TIMER
+                machine_info.user_name = current_user.name
+            else:
+                machine_info.finish_time = None
+            db.session.commit()
+            # Returns the changes
+            return jsonify(
+                {
+                    "Public_ID": machine_info.public_id,
+                    "Status": machine_info.status,
+                    "User_Name": machine_info.user_name,
+                    "Finish_Time": machine_info.finish_time,
+                }
             )
-            machine_info.user_name = user_name
-        else:
-            machine_info.finish_time = None
-        db.session.commit()
-        # Returns the changes
-        return jsonify(
-            {
-                "Public_ID": machine_info.public_id,
-                "Status": machine_info.status,
-                "User_Name": machine_info.user_name,
-                "Finish_Time": machine_info.finish_time,
-            }
-        )
-    abort(400)
-    return jsonify(404)
+        except AttributeError:
+            abort(404, f"Could not PUT machine with Floor_ID: {requested_floor_id}")
+    return abort(400, "No method available to handle that call")
 
 
 @machine.route(

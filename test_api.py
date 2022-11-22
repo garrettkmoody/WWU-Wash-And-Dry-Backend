@@ -153,8 +153,6 @@ def test_successful_create_machine_by_id_1(app_context):
             "Floor_id": MACHINE_TEST_FLOOR_ID,
             "Dorm": MACHINE_TEST_DORM,
             "Floor": MACHINE_TEST_FLOOR,
-            "Status": MACHINE_TEST_STATUS,
-            "Last_service_date": MACHINE_TEST_LAST_SERVICE_DATE,
             "Installation_date": MACHINE_TEST_INSTALLATION_DATE,
         },
         headers={"access_token": get_mock_token()},
@@ -179,8 +177,6 @@ def test_failed_create_machine_by_id_1(app_context):
             "Floor_id": MACHINE_TEST_FLOOR_ID,
             "Dorm": MACHINE_TEST_DORM,
             "Floor": MACHINE_TEST_FLOOR,
-            "Status": MACHINE_TEST_STATUS,
-            "Last_service_date": MACHINE_TEST_LAST_SERVICE_DATE,
             "Installation_date": MACHINE_TEST_INSTALLATION_DATE,
         },
         headers={"access_token": get_mock_token()},
@@ -201,8 +197,6 @@ def test_failed_create_machine_by_id_2(app_context):
             "Floor_id": MACHINE_TEST_FLOOR_ID,
             "Dorm": MACHINE_TEST_DORM,
             "Floor": "pizza",
-            "Status": MACHINE_TEST_STATUS,
-            "Last_service_date": MACHINE_TEST_LAST_SERVICE_DATE,
             "Installation_date": MACHINE_TEST_INSTALLATION_DATE,
         },
         headers={"access_token": get_mock_token()},
@@ -222,8 +216,6 @@ def test_failed_create_machine_by_id_3(app_context):
         query_string={
             "Floor_id": MACHINE_TEST_FLOOR_ID,
             "Floor": MACHINE_TEST_FLOOR,
-            "Status": MACHINE_TEST_STATUS,
-            "Last_service_date": MACHINE_TEST_LAST_SERVICE_DATE,
             "Installation_date": MACHINE_TEST_INSTALLATION_DATE,
         },
         headers={"access_token": get_mock_token()},
@@ -252,10 +244,10 @@ def test_successful_get_machine_by_id(app_context):
             "Floor": 1,
             "Dorm": "Sittner",
             "Status": "Free",
-            "Last_Service_Date": "10-27-2022",
+            "Last_Service_Date": None,
             "Installation_Date": "10-27-2022",
-            "Finish_Time": 0,
-            "User_Name": "None",
+            "Finish_Time": None,
+            "User_Name": None,
         }
     )
 
@@ -268,9 +260,11 @@ def test_failed_get_machine_by_id(app_context):
     Returns: Void
     """
     response = app.test_client().get(
-        "/machine/400", headers={"access_token": get_mock_token()}
+        "/machine/404", headers={"access_token": get_mock_token()}
     )
     assert response.status_code == 404
+    assert (json.loads(response.data) == {
+            'error': '404 Not Found: Could not GET machine with ID: 404'})
 
 
 # ---------------------------PUT MACHINE BY ID--------------------------------------
@@ -307,7 +301,7 @@ def test_successful_put_machine_by_id_1(app_context):
             "Last_Service_Date": "10-27-2022",
             "Installation_Date": "10-27-2022",
             "Finish_Time": (int(time.time())+30),
-            "User_Name": "None",
+            "User_Name": None,
         }
     )
 
@@ -341,7 +335,7 @@ def test_successful_put_machine_by_id_2(app_context):
             "Status": "In_use",
             "Last_Service_Date": "10-27-2022",
             "Installation_Date": "10-27-2022",
-            "User_Name": "None",
+            "User_Name": None,
             "Finish_Time": (int(time.time())+30),
         }
     )
@@ -420,11 +414,7 @@ def test_successful_get_machine_by_dorm_floor_floor_id(app_context):
         MACHINE_TEST_FLOOR_ID,
         MACHINE_TEST_DORM,
         MACHINE_TEST_FLOOR,
-        MACHINE_TEST_STATUS,
-        MACHINE_TEST_LAST_SERVICE_DATE,
         MACHINE_TEST_INSTALLATION_DATE,
-        MACHINE_TEST_FINISH_TIME,
-        MACHINE_TEST_USER_NAME,
     )
     db.session.add(new_machine)
     db.session.commit()
@@ -474,33 +464,21 @@ def test_get_machines_by_dorm_floor(app_context):
         test_floor_id[0],
         MACHINE_TEST_DORM,
         MACHINE_TEST_FLOOR,
-        MACHINE_TEST_STATUS,
-        MACHINE_TEST_LAST_SERVICE_DATE,
         MACHINE_TEST_INSTALLATION_DATE,
-        MACHINE_TEST_FINISH_TIME,
-        MACHINE_TEST_USER_NAME,
     )
     new_machine1 = Machine(
         test_public_id[1],
         test_floor_id[1],
         MACHINE_TEST_DORM,
         MACHINE_TEST_FLOOR,
-        MACHINE_TEST_STATUS,
-        MACHINE_TEST_LAST_SERVICE_DATE,
         MACHINE_TEST_INSTALLATION_DATE,
-        MACHINE_TEST_FINISH_TIME,
-        MACHINE_TEST_USER_NAME,
     )
     new_machine2 = Machine(
         test_public_id[2],
         test_floor_id[2],
         MACHINE_TEST_DORM,
         MACHINE_TEST_FLOOR,
-        MACHINE_TEST_STATUS,
-        MACHINE_TEST_LAST_SERVICE_DATE,
         MACHINE_TEST_INSTALLATION_DATE,
-        MACHINE_TEST_FINISH_TIME,
-        MACHINE_TEST_USER_NAME,
     )
     db.session.add(new_machine0)
     db.session.add(new_machine1)
@@ -555,33 +533,21 @@ def test_get_machines_by_dorm(app_context):
         test_floor_id[0],
         MACHINE_TEST_DORM,
         test_floor[0],
-        MACHINE_TEST_STATUS,
-        MACHINE_TEST_LAST_SERVICE_DATE,
         MACHINE_TEST_INSTALLATION_DATE,
-        MACHINE_TEST_FINISH_TIME,
-        MACHINE_TEST_USER_NAME,
     )
     new_machine1 = Machine(
         test_public_id[1],
         test_floor_id[1],
         MACHINE_TEST_DORM,
         test_floor[1],
-        MACHINE_TEST_STATUS,
-        MACHINE_TEST_LAST_SERVICE_DATE,
         MACHINE_TEST_INSTALLATION_DATE,
-        MACHINE_TEST_FINISH_TIME,
-        MACHINE_TEST_USER_NAME,
     )
     new_machine2 = Machine(
         test_public_id[2],
         test_floor_id[2],
         MACHINE_TEST_DORM,
         test_floor[2],
-        MACHINE_TEST_STATUS,
-        MACHINE_TEST_LAST_SERVICE_DATE,
         MACHINE_TEST_INSTALLATION_DATE,
-        MACHINE_TEST_FINISH_TIME,
-        MACHINE_TEST_USER_NAME,
     )
     db.session.add(new_machine0)
     db.session.add(new_machine1)
@@ -646,11 +612,7 @@ def test_send_notifications(app_context):
         MACHINE_TEST_FLOOR_ID,
         MACHINE_TEST_DORM,
         MACHINE_TEST_FLOOR,
-        "In_use",
-        MACHINE_TEST_LAST_SERVICE_DATE,
         MACHINE_TEST_INSTALLATION_DATE,
-        int(time.time()),
-        "Taylor",
     )
     db.session.add(new_machine)
     db.session.commit()

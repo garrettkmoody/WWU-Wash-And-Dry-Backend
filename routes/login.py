@@ -2,7 +2,10 @@
 This file holds the API routes for SSO login
 """
 
-#pylint: disable = C0301, W3101, W0702, W3101, E1101
+#pylint: disable = W3101, W0702, E1101
+#W3101: Missing timeout argument for method 'requests.post'
+#W0702: No exception type(s) specified (bare-except)
+#E1101: E1101: Instance of '' has no '' member (no-member)
 
 import datetime
 from flask import Blueprint, request, redirect
@@ -31,11 +34,13 @@ def callback():
         "client_id": app.config["AZURE_OAUTH_APPLICATION_ID"],
         "code": request.args.get("code"),
         "client_secret": app.config["AZURE_OAUTH_CLIENT_SECRET"],
-        "redirect_uri": 'http://localhost:5000/login/callback' if app.config["ENVIRONMENT"] == 'testing'
+        "redirect_uri":
+        'http://localhost:5000/login/callback' if app.config["ENVIRONMENT"] == 'testing'
         else 'https://172.27.4.142:5000/login/callback'
     }
     request_data = requests.post(
-        url="https://login.microsoftonline.com/d958f048-e431-4277-9c8d-ebfb75e7aa64/oauth2/v2.0/token",
+        url=
+        "https://login.microsoftonline.com/d958f048-e431-4277-9c8d-ebfb75e7aa64/oauth2/v2.0/token",
         data=body,
     )
     data = request_data.json()
@@ -46,8 +51,6 @@ def callback():
         )
         user_data = user_response.json()
         if not User.query.filter_by(public_id=user_data["id"]).first():
-            #pylint: disable=E1120
-            # Need to work this out
             new_user = User(
                 user_data["id"],
                 user_data["displayName"],

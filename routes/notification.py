@@ -2,10 +2,11 @@
 This file holds the API routes for sending notifications
 """
 
-#pylint: disable = E1101, W0702
+#pylint: disable = E1101
+#E1101: Instance of '' has no '' member (no-member)
 
 import time
-from flask import Blueprint, jsonify, make_response
+from flask import Blueprint, jsonify, make_response, abort
 from flask_mail import Message
 from extensions import db, mail
 from models.machine import Machine
@@ -13,9 +14,6 @@ from models.user import User
 
 notification = Blueprint('notification', __name__)
 
-TIMER = 60 #How often to check when to send notification in seconds
-
-RECIPIENTS = ["WWU-Wash-And-Dry@outlook.com"]
 MSG_BODY = "Yo, go get your laundry"
 MSG_SUBJECT = "Laundry is Done"
 
@@ -39,15 +37,14 @@ def send_email(msg_subject, msg_body, msg_recipients):
         )
         mail.send(email)
         return jsonify("Email was successfully sent")
-    except:
-        return make_response("Could not send email.",400)
+    except AssertionError:
+        return make_response("Could not send email.", 400)
 
 
 @notification.route("/send-notifications")
 def send_notifications():
     """
     This method will send an email to the users whose laundry is done
-
     Input Arguments: None
     Returns: Void
     """
@@ -57,9 +54,12 @@ def send_notifications():
     while counter < len(finished_machines):
         finished_machines[counter].status = "Free"
         finished_machines[counter].finish_time = None
-        user = User.query.filter_by(name = finished_machines[counter].user_name).first_or_404()
-        send_email(MSG_SUBJECT, MSG_BODY, [user.email])
-        finished_machines[counter].user_name = None
-        db.session.commit()
+        try:
+            user = User.query.filter_by(name = finished_machines[counter].user_name).first_or_404()
+            send_email(MSG_SUBJECT, MSG_BODY, [user.email])
+            finished_machines[counter].user_name = None
+            db.session.commit()
+        except AttributeError:
+            abort(404, f"Could not send email to user with name: {user.name}")
         counter+=1
     return jsonify("Notifications sent")
