@@ -12,7 +12,7 @@ from flask import Blueprint, request, redirect
 import requests
 import jwt
 from extensions import db, app
-from models.user import User
+from app.models.user import User
 
 login = Blueprint('login', __name__)
 

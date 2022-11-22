@@ -9,7 +9,7 @@ from functools import wraps
 from flask import Blueprint, jsonify, request
 import jwt
 from extensions import app
-from models.user import User
+from app.models.user import User
 
 tokens = Blueprint('token', __name__)
 

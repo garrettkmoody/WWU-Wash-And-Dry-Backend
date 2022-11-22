@@ -8,8 +8,8 @@ This file holds the API routes for get, delete, and put users
 
 from flask import Blueprint, request, jsonify, abort
 from extensions import db
-from models.user import User
-from routes.token import token_required
+from app.models.user import User
+from app.routes.token import token_required
 
 user = Blueprint('user', __name__)
 

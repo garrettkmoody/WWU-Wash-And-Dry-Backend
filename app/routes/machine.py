@@ -11,9 +11,10 @@ This file holds the API routes for post, get, delete, and put machines
 import datetime
 import time
 from flask import Blueprint, request, jsonify, abort
+from sqlalchemy.exc import IntegrityError
 from extensions import db
-from models.machine import Machine
-from routes.token import token_required
+from app.models.machine import Machine
+from app.routes.token import token_required
 
 machine = Blueprint("machine", __name__)
 
@@ -36,17 +37,20 @@ def machine_by_id(current_user, requested_id):
     #Accepting General Use Parameter Arguments
     if request.args:
         # Accepting Parameter Arguments
-        floor_id = int(request.args.get("Floor_id"))
-        dorm = request.args.get("Dorm")
-        floor = int(request.args.get("Floor"))
-        installation_date = request.args.get("Installation_date")
+        try:
+            floor_id = int(request.args.get("Floor_id"))
+            dorm = request.args.get("Dorm")
+            floor = int(request.args.get("Floor"))
+            installation_date = request.args.get("Installation_date")
+        except ValueError:
+            abort(400, "Input(s) is not of correct type")
         # Checking Parameter Arguments
         if floor_id < 0 | floor_id > 100:
-            abort(400, "Floor_id is out of range of the acceptable ids")
+            abort(400, f"Floor_id: {floor_id}, is out of range of the acceptable ids")
         if dorm not in DORM_LIST:
-            abort(400, "Dorm is not recognized as a valid dorm")
+            abort(400, f"Dorm: {dorm}, is not recognized as a valid dorm")
         if floor < 0 | floor > 10:
-            abort(400, "Floor is out of range of the acceptable levels")
+            abort(400, f"Floor {floor}, is out of range of the acceptable levels")
         try:
             datetime.datetime.strptime(installation_date, "%m-%d-%Y")
         except ValueError:
@@ -68,8 +72,8 @@ def machine_by_id(current_user, requested_id):
                     f"Created information for machine with ID: {requested_id}"
                 ), 200
             )
-        except db.IntegrityError:
-            abort(500, f"Machine {requested_id} is already registered.")
+        except IntegrityError:
+            abort(500, f"Machine {requested_id} is already registered")
     if request.method == "GET":
         try:
             # Find the Machine

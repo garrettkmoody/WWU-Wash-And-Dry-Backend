@@ -10,8 +10,8 @@ import time
 from flask import Blueprint, jsonify, make_response, abort
 from flask_mail import Message
 from extensions import db, mail
-from models.machine import Machine
-from models.user import User
+from app.models.machine import Machine
+from app.models.user import User
 
 notification = Blueprint('notification', __name__)
 

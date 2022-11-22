@@ -9,13 +9,13 @@ File for the initialization of the app
 import os
 from dotenv import load_dotenv
 from extensions import db, mail, app
-from routes.error import error, \
-    custom_404_errorhandler
-from routes.login import login
-from routes.machine import machine
-from routes.notification import notification
-from routes.token import tokens
-from routes.user import user
+from app.routes.error import error, \
+    custom_400_errorhandler, custom_404_errorhandler, custom_500_errorhandler
+from app.routes.login import login
+from app.routes.machine import machine
+from app.routes.notification import notification
+from app.routes.token import tokens
+from app.routes.user import user
 
 #Include dotenv
 load_dotenv()
@@ -75,7 +75,9 @@ def configure_app(app_to_configure):
     app_to_configure.register_blueprint(user)
 
     #Register error routes
+    app_to_configure.register_error_handler(400, custom_400_errorhandler)
     app_to_configure.register_error_handler(404, custom_404_errorhandler)
+    app_to_configure.register_error_handler(500, custom_500_errorhandler)
 
     #Return an instance of the app
     return app_to_configure
