@@ -52,21 +52,21 @@ def test_send_notifications(app_context):
                     "WWU-Wash-And-Dry@outlook.com")
     db.session.add(new_user)
     new_machine = Machine(
-        constants.MACHINE_TEST_PUBLIC_ID,
-        constants.MACHINE_TEST_FLOOR_ID,
-        constants.MACHINE_TEST_DORM,
-        constants.MACHINE_TEST_FLOOR,
-        constants.MACHINE_TEST_INSTALLATION_DATE,
+        constants.MACHINE_TEST_PUBLIC_ID2,
+        constants.MACHINE_TEST_FLOOR_ID2,
+        constants.MACHINE_TEST_DORM2,
+        constants.MACHINE_TEST_FLOOR2,
+        constants.MACHINE_TEST_INSTALLATION_DATE2,
     )
     db.session.add(new_machine)
     db.session.commit()
     app.test_client().get("/send-notifications")
     test_machine = Machine.query.filter_by(
-        public_id=constants.MACHINE_TEST_PUBLIC_ID
+        public_id=constants.MACHINE_TEST_PUBLIC_ID2
     ).first_or_404()
     User.query.filter_by(public_id=constants.USER_TEST_PUBLIC_ID).delete()
     Machine.query.filter_by(public_id=constants.USER_TEST_PUBLIC_ID).delete()
-    Machine.query.filter_by(public_id=constants.MACHINE_TEST_PUBLIC_ID).delete()
+    Machine.query.filter_by(public_id=constants.MACHINE_TEST_PUBLIC_ID2).delete()
     db.session.commit()
     assert test_machine.status == "Free"
     assert test_machine.finish_time is None
