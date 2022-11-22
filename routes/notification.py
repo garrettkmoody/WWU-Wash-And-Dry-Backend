@@ -2,8 +2,9 @@
 This file holds the API routes for sending notifications
 """
 
-#pylint: disable = E1101
+#pylint: disable = E1101, W0702
 #E1101: Instance of '' has no '' member (no-member)
+#W0702: No exception type(s) specified (bare-except)
 
 import time
 from flask import Blueprint, jsonify, make_response, abort
@@ -37,7 +38,7 @@ def send_email(msg_subject, msg_body, msg_recipients):
         )
         mail.send(email)
         return jsonify("Email was successfully sent")
-    except AssertionError:
+    except:
         return make_response("Could not send email.", 400)
 
 
