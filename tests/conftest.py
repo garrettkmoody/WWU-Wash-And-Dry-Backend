@@ -1,8 +1,13 @@
 """
 This file holds the app and mock tocked for the test application
 """
-import pytest
+
+#pylint: disable = W0621, E1101
+#W0621: Redefining name 'test_client' from outer scope (line 17) (redefined-outer-name)
+#E1101: Instance of 'scoped_session' has no 'add' member (no-member)
+
 import datetime
+import pytest
 import jwt
 from extensions import app, db
 from init import configure_app
@@ -25,7 +30,12 @@ def test_client():
             yield testing_client
 
 @pytest.fixture(scope='function')
-def init_database(test_client):
+def init_database():
+    """
+    This method creates a unique temporary database for each test
+    Input arguments: test_client
+    Return: Void
+    """
     db.create_all()
 
     # Can insert test data here later
