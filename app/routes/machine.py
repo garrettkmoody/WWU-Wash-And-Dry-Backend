@@ -2,16 +2,17 @@
 This file holds the API routes for post, get, delete, and put machines
 """
 
-#pylint: disable = E1101, R0912, R0915, W0613
+#pylint: disable = E1101, R0912, R0915, W0613, W0702
 #E1101: Instance of '' has no '' member (no-member)
 #R0912: Too many branches (23/12) (too-many-branches)
 #R0915: Too many statements (63/50) (too-many-statements)
 #W0613: Unused argument 'current_user' (unused-argument)
+#W0702: No exception type(s) specified (bare-except)
+#
 
 import datetime
 import time
 from flask import Blueprint, request, jsonify, abort
-from sqlalchemy.exc import IntegrityError
 from extensions import db
 from app.models.machine import Machine
 from app.routes.token import token_required
@@ -20,7 +21,8 @@ machine = Blueprint("machine", __name__)
 
 DORM_LIST = ["Sittner", "Conard", "Foreman"]
 STATUS_LIST = ["Free", "In_use", "Broken"]
-TIMER = 30
+TIMER = 1800 # 30 minutes in seconds
+TIME_MARGIN = 300 # 5*60, This allows a time margin of five minutes for the notification system
 
 
 @machine.route("/machine/<int:requested_id>", methods=["GET", "DELETE", "POST", "PUT"])
@@ -57,6 +59,9 @@ def machine_by_id(current_user, requested_id):
             abort(400, "Installation date is not formatted properly, use: %m-%d-%Y")
         # Parameter Arguments are valid, attempt to create user
     if request.method == "POST":
+        # Check for integrity error
+        if Machine.query.filter_by(public_id=requested_id).first() is not None:
+            abort(500, f"Machine {requested_id} is already registered")
         try:
             new_machine = Machine(
                 int(requested_id),
@@ -72,8 +77,8 @@ def machine_by_id(current_user, requested_id):
                     f"Created information for machine with ID: {requested_id}"
                 ), 200
             )
-        except IntegrityError:
-            abort(500, f"Machine {requested_id} is already registered")
+        except:
+            abort(500, "Error unknown")
     if request.method == "GET":
         try:
             # Find the Machine
@@ -126,7 +131,7 @@ def machine_by_id(current_user, requested_id):
             if status is not None:
                 machine_to_update.status = status
                 if status == "In_use":
-                    machine_to_update.finish_time = int(time.time()) + TIMER
+                    machine_to_update.finish_time = (int(time.time()) + TIMER) // TIME_MARGIN
             if installation_date is not None:
                 machine_to_update.installation_date = installation_date
             if last_service_date is not None:
@@ -198,7 +203,7 @@ def machine_by_dorm_floor_floor_id(
             # If the status is in_use and a user is provided,
             # then assigns a user and finish_time to the machine
             if status == "In_use" and current_user.name is not None:
-                machine_info.finish_time = int(time.time()) + TIMER
+                machine_info.finish_time = (int(time.time()) + TIMER) // TIME_MARGIN
                 machine_info.user_name = current_user.name
             else:
                 machine_info.finish_time = None
@@ -227,12 +232,25 @@ def machines_by_dorm_and_floor(current_user, requested_dorm, requested_floor):
     Parameter: Dorm and Floor number
     Returns: A json object that has a list of machines objects for that floor and dorm
     """
+    # Check Parameters are of correct type
+    try:
+        requested_floor = int(requested_floor)
+    except ValueError:
+        abort(400, "Input(s) is not of correct type")
+    # Checking Parameter Arguments
+    if requested_floor < 0 | requested_floor > 100:
+        abort(400, f"Floor {requested_floor}, is out of range of the acceptable levels")
+    if requested_dorm not in DORM_LIST:
+        abort(400, f"Dorm: {requested_dorm}, is not recognized as a valid dorm")
     # Find all machines on the requested floor
     machine_info = Machine.query.filter_by(
         floor=requested_floor, dorm=requested_dorm
     ).all()
     counter = 0
     request_objects = []
+    if len(machine_info) == 0:
+        abort(404,
+        f"There are no machines in the dorm: {requested_dorm}, on floor: {requested_floor}")
     while counter < len(machine_info):
         # Creating a list of dictionaries
         request_return_dicts = {
@@ -253,6 +271,9 @@ def machines_by_dorm(current_user, requested_dorm):
     Parameters: The requested dorm
     Returns: A json object with a list of machines nd their information
     """
+    # Checking Parameter Arguments
+    if requested_dorm not in DORM_LIST:
+        abort(400, f"Dorm: {requested_dorm}, is not recognized as a valid dorm")
     # Find all machines in the requested dorm
     machine_info = Machine.query.filter_by(dorm=requested_dorm).all()
     counter = 0

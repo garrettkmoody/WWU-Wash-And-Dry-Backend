@@ -62,10 +62,6 @@ def configure_app(app_to_configure):
     db.init_app(app_to_configure)
     mail.init_app(app_to_configure)
 
-    #Create the database
-    with app_to_configure.app_context():
-        db.create_all()
-
     #Register blueprints for routes
     app_to_configure.register_blueprint(error)
     app_to_configure.register_blueprint(login)
@@ -85,4 +81,7 @@ def configure_app(app_to_configure):
 #Main Driver Function
 if __name__ == "__main__":
     app = configure_app(app)
+    #Create the database
+    with app.app_context():
+        db.create_all()
     app.run()

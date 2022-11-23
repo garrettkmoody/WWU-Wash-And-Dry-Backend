@@ -17,6 +17,7 @@ notification = Blueprint('notification', __name__)
 
 MSG_BODY = "Yo, go get your laundry"
 MSG_SUBJECT = "Laundry is Done"
+TIME_MARGIN = 300 # 5*60, This allows a time margin of five minutes for the notification system
 
 def send_email(msg_subject, msg_body, msg_recipients):
     """
@@ -49,7 +50,7 @@ def send_notifications():
     Input Arguments: None
     Returns: Void
     """
-    current_time = int(time.time())
+    current_time = int(time.time()) // TIME_MARGIN
     finished_machines = Machine.query.filter_by(finish_time = current_time).all()
     counter = 0
     while counter < len(finished_machines):
