@@ -22,7 +22,6 @@ def token_required(function_decorator):
         token = None
         if "access_token" in request.headers:
             token = request.headers["access_token"]
-
         if not token:
             return jsonify({"message": "Missing Authentication Token!"}), 401
         try:

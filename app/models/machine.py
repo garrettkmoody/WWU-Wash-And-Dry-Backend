@@ -2,9 +2,10 @@
 This file holds the Machine Model
 """
 
-#pylint: disable = R0913, R0903
+#pylint: disable = R0913, R0903, R0902
 #R0913: Too many arguments (6/5) (too-many-arguments)
 #R0903: Too few public methods (0/2) (too-few-public-methods)
+#R0902: Too many instance attributes (8/7) (too-many-instance-attributes)
 
 from extensions import db
 

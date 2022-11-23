@@ -89,86 +89,13 @@ def custom_504_errorhandler(error_message):
     return jsonify(error=str(error_message)), 504
 
 
-#-----------------------------Routes to test custom error templates-------------------
+#-----------------------------Route to test custom error templates-------------------
 
-@error.route("/test400")
-def test_400_endpoint():
+@error.route("/test/<int:error_code>")
+def test_400_endpoint(error_code):
     """
-    Error handler for status code 400 which is a bad request
-    Parameters: Takes in an error
+    Error handler test end point
+    Parameters: Takes in an error code
     Returns: A json message saying what the error is and the error code
     """
-    abort(400, "Bad Request")
-
-
-@error.route("/test401")
-def test_401_endpoint():
-    """
-    Test for 401 error handler
-    Parameters: Takes in an error
-    Returns: A json message saying what the error is and the error code
-    """
-    abort(401, "Unauthorized User")
-
-@error.route("/test403")
-def test_403_endpoint():
-    """
-    Test for 403 error handler
-    Parameters: Takes in an error
-    Returns: A json message saying what the error is and the error code
-    """
-    abort(403, "Forbidden API Call")
-
-@error.route("/test404")
-def test_404_endpoint():
-    """
-    Test for 404 error handler
-    Parameters: Takes in an error
-    Returns: A json message saying what the error is and the error code
-    """
-    abort(404, "Page Not Found")
-
-@error.route("/test429")
-def test_429_endpoint():
-    """
-    Test for 429 error handler
-    Parameters: Takes in an error
-    Returns: A json message saying what the error is and the error code
-    """
-    abort(429, "Too Many Requests")
-
-@error.route("/test500")
-def test_500_endpoint():
-    """
-    Test for 500 error
-    Parameters: Takes in an error
-    Returns: A json message saying what the error is and the error code
-    """
-    abort(500, "Internal Server Error")
-
-@error.route("/test502")
-def test_502_endpoint():
-    """
-    Test for 502 error
-    Parameters: Takes in an error
-    Returns: A json message saying what the error is and the error code
-    """
-    abort(502, "Bad Gateway")
-
-@error.route("/test503")
-def test_503_endpoint():
-    """
-    Test for 503 error
-    Parameters: Takes in an error
-    Returns: A json message saying what the error is and the error code
-    """
-    abort(503, "Service Unavailable")
-
-@error.route("/test504")
-def test_504_endpoint():
-    """
-    Test for 504 error
-    Parameters: Takes in an error
-    Returns: A json message saying what the error is and the error code
-    """
-    abort(504, "Gateway Timed Out")
+    abort(error_code, "ERROR MESSAGE")

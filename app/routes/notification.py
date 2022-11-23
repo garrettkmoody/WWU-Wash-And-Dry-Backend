@@ -7,7 +7,7 @@ This file holds the API routes for sending notifications
 #W0702: No exception type(s) specified (bare-except)
 
 import time
-from flask import Blueprint, jsonify, make_response, abort
+from flask import Blueprint, jsonify, make_response
 from flask_mail import Message
 from extensions import db, mail
 from app.models.machine import Machine
@@ -51,17 +51,12 @@ def send_notifications():
     Returns: Void
     """
     current_time = int(time.time()) // TIME_MARGIN
-    finished_machines = Machine.query.filter_by(finish_time = current_time).all()
-    counter = 0
-    while counter < len(finished_machines):
-        finished_machines[counter].status = "Free"
-        finished_machines[counter].finish_time = None
-        try:
-            user = User.query.filter_by(name = finished_machines[counter].user_name).first_or_404()
-            send_email(MSG_SUBJECT, MSG_BODY, [user.email])
-            finished_machines[counter].user_name = None
-            db.session.commit()
-        except AttributeError:
-            abort(404, f"Could not send email to user with name: {user.name}")
-        counter+=1
+    while Machine.query.filter_by(finish_time = current_time).first() is not None:
+        finished_machines = Machine.query.filter_by(finish_time = current_time).first()
+        user = User.query.filter_by(name = finished_machines.user_name).first_or_404()
+        send_email(MSG_SUBJECT, MSG_BODY, [user.email])
+        finished_machines.status = "Free"
+        finished_machines.finish_time = None
+        finished_machines.user_name = None
+        db.session.commit()
     return jsonify("Notifications sent")

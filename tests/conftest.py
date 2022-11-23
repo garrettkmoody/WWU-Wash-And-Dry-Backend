@@ -11,9 +11,9 @@ import pytest
 import jwt
 from extensions import app, db
 from init import configure_app
-from tests import constants
 from app.models.user import User
 from app.models.machine import Machine
+from tests import constants
 
 app = configure_app(app)
 
@@ -65,9 +65,20 @@ def init_database():
         constants.MACHINE_TEST_FLOOR4,
         constants.MACHINE_TEST_INSTALLATION_DATE4,
     )
+    new_machine4 = Machine(
+        constants.MACHINE_TEST_PUBLIC_ID5,
+        constants.MACHINE_TEST_FLOOR_ID5,
+        constants.MACHINE_TEST_DORM5,
+        constants.MACHINE_TEST_FLOOR5,
+        constants.MACHINE_TEST_INSTALLATION_DATE5,
+    )
+    new_machine4.status = constants.MACHINE_TEST_STATUS5
+    new_machine4.finish_time = constants.MACHINE_TEST_FINISH_TIME5
+    new_machine4.user_name = constants.MACHINE_TEST_USER_NAME5
     db.session.add(new_machine1)
     db.session.add(new_machine2)
     db.session.add(new_machine3)
+    db.session.add(new_machine4)
     db.session.commit()
 
     yield
