@@ -47,12 +47,12 @@ def machine_by_id(current_user, requested_id):
         except ValueError:
             abort(400, "Input(s) is not of correct type")
         # Checking Parameter Arguments
-        if floor_id < 0 | floor_id > 100:
+        if (floor_id < 0) | (floor_id > 100):
             abort(400, f"Floor_id: {floor_id}, is out of range of the acceptable ids")
         if dorm not in DORM_LIST:
             abort(400, f"Dorm: {dorm}, is not recognized as a valid dorm")
-        if floor < 0 | floor > 10:
-            abort(400, f"Floor {floor}, is out of range of the acceptable levels")
+        if (floor < 0) | (floor > 10):
+            abort(400, f"Floor: {floor}, is out of range of the acceptable levels")
         try:
             datetime.datetime.strptime(installation_date, "%m-%d-%Y")
         except ValueError:
@@ -202,7 +202,7 @@ def machine_by_dorm_floor_floor_id(
             machine_info.status = status
             # If the status is in_use and a user is provided,
             # then assigns a user and finish_time to the machine
-            if status == "In_use" and current_user.name is not None:
+            if status == "In_use":
                 machine_info.finish_time = (int(time.time()) + TIMER) // TIME_MARGIN
                 machine_info.user_name = current_user.name
             else:
@@ -232,13 +232,8 @@ def machines_by_dorm_and_floor(current_user, requested_dorm, requested_floor):
     Parameter: Dorm and Floor number
     Returns: A json object that has a list of machines objects for that floor and dorm
     """
-    # Check Parameters are of correct type
-    try:
-        requested_floor = int(requested_floor)
-    except ValueError:
-        abort(400, "Input(s) is not of correct type")
     # Checking Parameter Arguments
-    if requested_floor < 0 | requested_floor > 100:
+    if (requested_floor < 0) | (requested_floor > 100):
         abort(400, f"Floor {requested_floor}, is out of range of the acceptable levels")
     if requested_dorm not in DORM_LIST:
         abort(400, f"Dorm: {requested_dorm}, is not recognized as a valid dorm")
