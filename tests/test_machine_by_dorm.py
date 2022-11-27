@@ -2,12 +2,12 @@
 This file holds the tests for the machine/<dorm> route
 """
 
-#pylint: disable = E1101, W0105, W0613
-# E1101: Instance of 'scoped_session' has no 'add' member
-# W0613: Unused argument 'init_database' (unused-argument)
+#pylint: disable = E1101, W0105, W0613, C0301
+#E1101: Instance of 'scoped_session' has no 'add' member
+#W0613: Unused argument 'init_database' (unused-argument)
+#C0301: Line too long (102/100) (line-too-long)
 
 import json
-import time
 from tests import constants
 from tests.conftest import get_mock_token
 
