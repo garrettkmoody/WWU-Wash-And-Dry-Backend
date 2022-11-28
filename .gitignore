@@ -2,6 +2,7 @@
 .env
 User.db
 Machine.db
+.coverage
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

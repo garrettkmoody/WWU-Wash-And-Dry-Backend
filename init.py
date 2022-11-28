@@ -2,22 +2,25 @@
 File for the initialization of the app
 """
 
-#pylint: disable = W0621
+#pylint: disable = W0702, C0103
+#W0702: No exception type(s) specified (bare-except)
+#C0103: Variable name "MAIL_PASSWORD" doesn't conform to snake_case naming style
 
 import os
 from dotenv import load_dotenv
-from extensions import db, mail, migrate, app
-from routes.error import error
-from routes.login import login
-from routes.machine import machine
-from routes.notification import notification
-from routes.token import token
-from routes.user import user
+from extensions import db, mail, app
+from app.routes.error import error, \
+    custom_400_errorhandler, custom_404_errorhandler, custom_500_errorhandler
+from app.routes.login import login
+from app.routes.machine import machine
+from app.routes.notification import notification
+from app.routes.token import tokens
+from app.routes.user import user
 
 #Include dotenv
 load_dotenv()
 
-def configure_app(app):
+def configure_app(app_to_configure):
     """
     This function creates an app instance with the proper app
     configurations, mail configurations, registered blueprints,
@@ -28,7 +31,7 @@ def configure_app(app):
     """
 
     #App Configurations
-    app.config.from_mapping(
+    app_to_configure.config.from_mapping(
         SECRET_KEY=str(os.environ.get("SECRET_KEY")),
         SQLALCHEMY_DATABASE_URI="sqlite:///User.db",
         SQLALCHEMY_BINDS={"machine": "sqlite:///Machine.db"},
@@ -38,7 +41,7 @@ def configure_app(app):
         AZURE_OAUTH_APPLICATION_ID=str(os.environ.get("APPLICATION_ID")),
         ENVIRONMENT=str(os.environ.get("ENVIRONMENT")),
     )
-    #pylint: disable = C0103, W0702
+
     try:
         MAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
     except:
@@ -53,29 +56,32 @@ def configure_app(app):
         "MAIL_PASSWORD": MAIL_PASSWORD,
         "MAIL_SUPPRESS": True,
     }
-    app.config.update(mail_settings)
+    app_to_configure.config.update(mail_settings)
 
     #Initialize database, mail, and migrate
-    db.init_app(app)
-    mail.init_app(app)
-    migrate.init_app(app, db)
-
-    #Create the database
-    with app.app_context():
-        db.create_all()
+    db.init_app(app_to_configure)
+    mail.init_app(app_to_configure)
 
     #Register blueprints for routes
-    app.register_blueprint(error)
-    app.register_blueprint(login)
-    app.register_blueprint(machine)
-    app.register_blueprint(notification)
-    app.register_blueprint(token)
-    app.register_blueprint(user)
+    app_to_configure.register_blueprint(error)
+    app_to_configure.register_blueprint(login)
+    app_to_configure.register_blueprint(machine)
+    app_to_configure.register_blueprint(notification)
+    app_to_configure.register_blueprint(tokens)
+    app_to_configure.register_blueprint(user)
+
+    #Register error routes
+    app_to_configure.register_error_handler(400, custom_400_errorhandler)
+    app_to_configure.register_error_handler(404, custom_404_errorhandler)
+    app_to_configure.register_error_handler(500, custom_500_errorhandler)
 
     #Return an instance of the app
-    return app
+    return app_to_configure
 
 #Main Driver Function
 if __name__ == "__main__":
     app = configure_app(app)
+    #Create the database
+    with app.app_context():
+        db.create_all()
     app.run()
