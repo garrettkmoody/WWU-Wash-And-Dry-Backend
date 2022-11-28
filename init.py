@@ -85,7 +85,11 @@ def configure_app(app_to_configure):
     return app_to_configure
 
 
+# pylint: disable =W0621
 def populateDb(db):
+    """
+    Function that initializes our database
+    """
     counter = 1
     # Create Machines for Sittner
     for i in range(1, 11):
