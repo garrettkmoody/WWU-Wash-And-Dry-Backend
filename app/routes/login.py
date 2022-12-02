@@ -36,7 +36,7 @@ def callback():
         "client_secret": app.config["AZURE_OAUTH_CLIENT_SECRET"],
         "redirect_uri":
         'http://localhost:5000/login/callback' if app.config["ENVIRONMENT"] == 'testing'
-        else 'https://172.27.4.142:5000/login/callback'
+        else 'https://wwuwashanddryapi.cs.wallawalla.edu/login/callback'
     }
     request_data = requests.post(
         url=
