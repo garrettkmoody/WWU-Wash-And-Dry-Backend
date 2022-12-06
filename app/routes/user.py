@@ -57,7 +57,7 @@ def user_by_id(current_user, requested_user_id):
         dorm = request.args.get("Dorm")
         floor = int(request.args.get("Floor"))
         # Checking Parameter Arguments
-        if (floor < 0) | (floor > 100):
+        if (floor < 0) | (floor > 10):
             abort(400, "Floor is out of range of the acceptable levels")
         if dorm not in dorm_list:
             abort(400, "Dorm is not recognized as a valid dorm")
