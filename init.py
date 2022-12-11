@@ -7,6 +7,7 @@ File for the initialization of the app
 # C0103: Variable name "MAIL_PASSWORD" doesn't conform to snake_case naming style
 
 import os
+from flask_cors import CORS
 from dotenv import load_dotenv
 from extensions import db, mail, app
 from app.routes.error import (
@@ -121,6 +122,7 @@ def populateDb(db):
 # Main Driver Function
 if __name__ == "__main__":
     app = configure_app(app)
+    cors = CORS(app)
     # Create the database
     with app.app_context():
         db.create_all()
@@ -128,4 +130,10 @@ if __name__ == "__main__":
             populateDb(db)
         except:
             pass
-    app.run()
+
+    if app.config["ENVIRONMENT"] == 'testing':
+        app.run()
+    else:
+        app.run('wwuwashanddryapi.cs.wallawalla.edu', port=443,
+        ssl_context=('/etc/ssl/certs/wwuwashanddryapi.cs.wallawalla.edu.pem',
+        '/etc/ssl/private/wwuwashanddryapi.cs.wallawalla.edu.key'))
