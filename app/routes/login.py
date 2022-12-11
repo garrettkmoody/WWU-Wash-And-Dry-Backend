@@ -68,6 +68,7 @@ def callback():
             app.config["SECRET_KEY"],
             "HS256",
         )
+        print(token)
         print("Authentication Successful!")
         return redirect("https://reece-reklai.github.io/DormitoryWasherAndDryer/?token=" + token)
     except:

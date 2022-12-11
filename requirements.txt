@@ -8,3 +8,4 @@ requests
 pytest
 pylint
 datetime
+flask-cors
