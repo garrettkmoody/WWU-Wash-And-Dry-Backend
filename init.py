@@ -93,27 +93,33 @@ def populateDb(db):
     """
     counter = 1
     # Create Machines for Sittner
-    for i in range(1, 11):
+    for i in range(1, 21):
         newMachine = Machine(counter, i, "Sittner", 1, "09-21-22")
         db.session.add(newMachine)
         counter += 1
     newMachine = Machine(counter, 1, "Foreman", 2, "09-21-22")
     db.session.add(newMachine)
     counter += 1
+    newMachine = Machine(counter, 2, "Foreman", 2, "09-21-22")
+    db.session.add(newMachine)
+    counter += 1
     # Create Machines for Foreman
     for i in range(3, 8):
-        for j in range(1, 3):
+        for j in range(1, 5):
             newMachine = Machine(counter, j, "Foreman", i, "09-21-22")
             db.session.add(newMachine)
             counter += 1
     # Create Machines for Conard floor 1
-    for i in range(1, 4):
+    for i in range(1, 7):
         newMachine = Machine(counter, i, "Conard", 1, "09-21-22")
         db.session.add(newMachine)
         counter += 1
     # Create Machines for the rest of Conard
     for i in range(2, 5):
         newMachine = Machine(counter, 1, "Conard", i, "09-21-22")
+        db.session.add(newMachine)
+        counter += 1
+        newMachine = Machine(counter, 2, "Conard", i, "09-21-22")
         db.session.add(newMachine)
         counter += 1
     db.session.commit()
